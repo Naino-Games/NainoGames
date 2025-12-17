@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Splash Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sigmar+One&family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           CSS STYLING - SPLASH CONNECT THEME
+           ========================================= */
+        :root {
+            /* Theme Colors (Watery Blue) */
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c; /* Red for Bombs/Warnings */
+            --dark-color: #2c3e50;
+            --light-bg: #fdfdfd;
+            
+            /* UPDATED FONTS */
+            --ui-font: 'Sigmar One', cursive; /* Distinct title font */
+            --text-font: 'Open Sans', sans-serif; /* Clean body font */
+            --shadow-soft: 0 10px 25px rgba(0,0,0,0.25);
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: #000;
+            height: 100vh; width: 100vw;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+            font-family: var(--ui-font);
+            user-select: none; -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        #game-wrapper {
+            position: relative; width: 100%; height: 100%;
+            background: #000; overflow: hidden;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* --- UI LAYERS --- */
+        .ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: all 0.2s ease; z-index: 10;
+        }
+
+        .menu-bg {
+            background: rgba(10, 25, 40, 0.85);
+            backdrop-filter: blur(12px);
+            pointer-events: auto; 
+        }
+        .hidden { opacity: 0 !important; transform: scale(0.95); pointer-events: none !important; visibility: hidden; }
+        .interactive { pointer-events: auto; cursor: pointer; }
+
+        /* --- HUD --- */
+        #hud-layer {
+            justify-content: flex-start; padding-top: 20px; z-index: 20;
+            flex-direction: row; padding-left:20px; padding-right:20px;
+            align-items: flex-start;
+        }
+        
+        .score-pill {
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(5px);
+            padding: 10px 25px; border-radius: 30px;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: white; text-align: center;
+            margin-left: auto;
+            font-family: var(--text-font);
+        }
+        .score-label { font-size: 12px; letter-spacing: 1px; color:#ddd; }
+        .score-val { font-size: 32px; line-height: 1; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); font-family: var(--ui-font); }
+
+        /* --- BUTTONS --- */
+        .hud-btn {
+            width: 50px; height: 50px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(4px);
+            border-radius: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background 0.2s;
+            pointer-events: auto; z-index: 100;
+        }
+        .hud-btn:hover { background: rgba(255, 255, 255, 0.4); }
+        .hud-btn:active { transform: scale(0.92); }
+        .hud-btn svg { width: 26px; height: 26px; fill: white; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
+
+        /* Revert Main Menu buttons to original round style */
+        #main-menu-top .hud-btn {
+            border-radius: 50%; 
+            width: 55px; height: 55px; margin: 0 10px;
+            background: rgba(255, 255, 255, 0.4); 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            border: none;
+        }
+        #main-menu-top .hud-btn:hover { background: rgba(255, 255, 255, 0.6); }
+
+
+        #main-menu-top {
+            position: absolute; bottom: 40px; 
+            display: flex; justify-content: center; align-items: center; width: 100%;
+        }
+
+        .btn-rect {
+            background: var(--primary-color);
+            border: none; padding: 18px 0; width: 280px;
+            font-size: 24px; color: white;
+            border-radius: 18px; font-family: var(--ui-font);
+            cursor: pointer;
+            box-shadow: 0 6px 0 #1f618d, 0 15px 20px rgba(0,0,0,0.2);
+            transition: transform 0.1s; margin-top: 15px;
+            pointer-events: auto; text-transform: uppercase;
+            letter-spacing: 2px; position: relative; z-index: 50;
+        }
+        .btn-rect:active { transform: translateY(6px); box-shadow: 0 0 0 #1f618d, inset 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .btn-green { background: #27ae60; box-shadow: 0 6px 0 #1e8449; }
+        .btn-red { background: var(--accent-color); box-shadow: 0 6px 0 #c0392b; }
+        .btn-full { width: 100%; padding: 14px 0; border-radius: 14px; font-size: 20px; }
+        .btn-green:active, .btn-red:active { transform: translateY(6px); }
+
+
+        /* --- MENU SYSTEM --- */
+        .logo-title {
+            font-size: 80px; color: #fff; text-align: center;
+            line-height: 0.9;
+            text-shadow: 4px 4px 0 var(--secondary-color), 8px 8px 0 #000;
+            margin-bottom: 30px;
+            animation: float 3s infinite ease-in-out;
+            letter-spacing: 2px;
+        }
+        .menu-card {
+            background: var(--light-bg); width: 400px; padding: 30px;
+            border-radius: 30px; text-align: center;
+            box-shadow: var(--shadow-soft);
+            display: flex; flex-direction: column; gap: 12px;
+            color: var(--dark-color); box-sizing: border-box;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .card-header {
+            font-size: 28px; color: var(--dark-color);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 10px; position: relative;
+            display: inline-block; align-self: center;
+            font-family: var(--ui-font);
+        }
+        .card-header::after {
+            content: ''; display: block; width: 50px; height: 5px; background: var(--primary-color); border-radius: 3px; margin: 8px auto 0 auto;
+        }
+        
+        /* Name Input Menu: Full Width */
+        #name-input-field {
+            padding: 15px; border-radius: 12px; border: 3px solid var(--primary-color);
+            font-size: 22px; text-align: center; margin-bottom: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            outline: none; width: 100%; box-sizing: border-box; 
+            font-family: var(--text-font);
+        }
+
+        /* Game Over Screen Style (Flappy Nain inspired) */
+        .result-row {
+            display: flex; justify-content: space-around; width: 100%; margin-top: 10px; margin-bottom: 20px;
+            font-family: var(--ui-font);
+        }
+        .result-box {
+            background: #ecf0f1; border-radius: 15px; padding: 15px 25px;
+            width: 45%; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            border: 3px solid var(--primary-color);
+        }
+        .res-label {
+            font-size: 14px; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .res-val {
+            font-size: 40px; color: var(--accent-color); line-height: 1;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+        }
+
+        /* --- LEADERBOARD --- */
+        .leaderboard-list { list-style: none; padding: 0; margin: 0; width: 100%; font-family: var(--text-font); }
+        .lb-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #ecf0f1;
+            margin-bottom: 8px; padding: 12px 15px; border-radius: 12px; 
+            border-left: 5px solid var(--primary-color); 
+        }
+        .lb-rank { font-weight: 800; color: #7f8c8d; width: 25px; font-size: 18px; text-align: center; }
+        .lb-name { font-weight: 700; color: var(--dark-color); font-size: 18px; font-family: var(--text-font); }
+        .lb-score { font-family: var(--ui-font); font-size: 22px; color: var(--accent-color); }
+        
+        /* 2x5 Grid for Themes */
+        .color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .theme-opt { 
+            height: 60px; border-radius: 15px; cursor: pointer; border: 3px solid transparent; 
+            display: flex; justify-content: center; align-items: center; 
+            font-weight: 800; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); 
+            font-family: var(--text-font);
+        }
+        .theme-opt.selected { border-color: #333; box-shadow: 0 0 0 3px var(--primary-color); transform: scale(1.05); }
+
+        .hidden-icon { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="hud-layer" class="ui-layer hidden">
+        <div id="pause-btn" class="hud-btn interactive" title="Pause">
+            <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </div>
+        <div class="score-pill">
+            <div class="score-label">SCORE</div>
+            <div class="score-val" id="score-display">0</div>
+        </div>
+    </div>
+
+    <div id="main-menu" class="ui-layer menu-bg">
+        <div class="logo-title">SPLASH<br>CONNECT</div>
+        <button id="play-btn" class="btn-rect btn-green interactive">Play Now</button>
+        <button id="theme-menu-btn" class="btn-rect interactive">Themes</button>
+        
+        <div id="main-menu-top">
+            <div id="sound-btn" class="hud-btn interactive" title="Sound">
+                <svg id="icon-sound-on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                <svg id="icon-sound-off" class="hidden-icon" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+            </div>
+            <div id="leaderboard-btn" class="hud-btn interactive" title="Leaderboard">
+                <svg viewBox="0 0 24 24"><path d="M16 11V3H8v6H2v12h20V11h-6zm-6-6h4v14h-4V5zm-6 6h4v8H4v-8zm16 8h-4v-6h4v6z"/></svg>
+            </div>
+            <div id="info-btn" class="hud-btn interactive" title="About">
+                <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tutorial-layer" class="ui-layer hidden" style="pointer-events: auto;">
+        </div>
+
+
+    <div id="theme-menu" class="ui-layer menu-bg hidden">
+        <div class="menu-card">
+            <div class="card-header">Select Theme</div>
+            <div class="color-grid" id="theme-grid"></div>
+            <button id="close-theme-btn" class="btn-rect btn-full interactive" style="background: #95a5a6; box-shadow: 0 5px 0 #7f8c8d;">Back</button>
+        </div>
+    </div>
+
+    <div id="info-menu" class="ui-layer menu-bg hidden">
+        <div class="menu-card">
+            <div class="card-header">Splash Connect</div>
+            <div style="font-family: var(--text-font); color:#7f8c8d; line-height:1.6;">
+                Game by <strong style="color:var(--dark-color);">Nawab Husnain</strong>
+                <br><br>
+                Mechanics: Drag to connect 3 or more same-colored water balloons to pop them and score. New balloons fall from the sky into the glass jar. Watch out for Move Bombs which cost a point upon successful connection!
+            </div>
+            <button id="close-info-btn" class="btn-rect btn-full interactive" style="background: #95a5a6; box-shadow: 0 5px 0 #7f8c8d; margin-top: 10px;">Back</button>
+        </div>
+    </div>
+    
+    <div id="leaderboard-menu" class="ui-layer menu-bg hidden">
+        <div class="menu-card">
+            <div class="card-header">Top Scores</div>
+            <ul class="leaderboard-list" id="leaderboard-list"></ul>
+            <button id="close-leaderboard-btn" class="btn-rect btn-full interactive" style="background: #95a5a6; box-shadow: 0 5px 0 #7f8c8d;">Close</button>
+        </div>
+    </div>
+
+    <div id="pause-menu" class="ui-layer menu-bg hidden">
+        <div class="menu-card">
+            <div class="card-header" style="color: var(--accent-color);">Paused</div>
+            <button id="resume-btn" class="btn-rect btn-full btn-green interactive">Resume</button>
+            <button id="quit-save-btn" class="btn-rect btn-red btn-full interactive">Quit & Save Score</button>
+        </div>
+    </div>
+
+    <div id="game-over-menu" class="ui-layer menu-bg hidden">
+        <div class="menu-card">
+            <div class="card-header" style="margin-bottom: 20px;">GAME OVER</div>
+            <div style="color:#e74c3c; font-family:var(--text-font); margin-bottom:10px;" id="fail-msg"></div>
+            
+            <div class="result-row">
+                <div class="result-box">
+                    <div class="res-label">Score</div>
+                    <div class="res-val" id="final-score">0</div>
+                </div>
+                <div class="result-box">
+                    <div class="res-label">Best</div>
+                    <div class="res-val" id="best-score">0</div>
+                </div>
+            </div>
+            <button id="retry-btn" class="btn-rect btn-full btn-green interactive" style="margin-top:0;">Try Again</button>
+            <button id="home-btn" class="btn-rect btn-red btn-full interactive">Main Menu</button>
+        </div>
+    </div>
+
+    <div id="name-input-menu" class="ui-layer menu-bg hidden">
+        <div class="menu-card">
+            <div class="card-header" style="color: var(--secondary-color);">New Record!</div>
+            <div style="color:#7f8c8d; margin-bottom:15px; font-family:var(--text-font);">Enter your name:</div>
+            <input type="text" id="name-input-field" maxlength="10" placeholder="PLAYER" autocomplete="off">
+            <button id="submit-name-btn" class="btn-rect btn-full btn-green interactive">Save Score</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* =========================================
+   UTILITY & AUDIO
+   ========================================= */
+const COLS = 6;
+const ROWS = 7; 
+
+class AudioController {
+    constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.muted = false;
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.connect(this.ctx.destination);
+        this.muted = localStorage.getItem('sc_muted') === 'true';
+        this.masterGain.gain.setValueAtTime(this.muted ? 0 : 1, 0);
+    }
+    toggleMute() {
+        if(this.ctx.state === 'suspended') this.ctx.resume();
+        this.muted = !this.muted;
+        this.masterGain.gain.setValueAtTime(this.muted ? 0 : 1, this.ctx.currentTime);
+        localStorage.setItem('sc_muted', this.muted);
+        return this.muted;
+    }
+    playTone(freq, type, dur, gainVal = 0.2) {
+        if(this.muted) return;
+        const ctx = this.ctx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        filter.type = 'lowpass'; filter.frequency.setValueAtTime(800, ctx.currentTime);
+
+        osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + dur);
+        
+        osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
+        osc.start(); osc.stop(ctx.currentTime + dur);
+    }
+    
+    // Custom "Water Balloon Pop" sound effect
+    sfxPop(mod) { 
+        if(this.muted) return;
+        const ctx = this.ctx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        
+        const freq = 120 + (mod * 20); // Lower pitch for a "wet" sound
+        const dur = 0.2;
+        const gainVal = 0.6;
+
+        filter.type = 'bandpass'; filter.frequency.setValueAtTime(250, ctx.currentTime); 
+        filter.Q.setValueAtTime(0.5, ctx.currentTime); 
+
+        osc.type = 'square'; 
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(freq * 0.5, ctx.currentTime + dur * 0.1); 
+
+        gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur * 0.8);
+        
+        osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain);
+        osc.start(); osc.stop(ctx.currentTime + dur);
+    }
+    sfxConnect() { this.playTone(600, 'sine', 0.05); }
+    sfxClick() { this.playTone(800, 'sine', 0.05); }
+    sfxWarn() { this.playTone(150, 'sawtooth', 0.2); }
+    sfxOver() { this.playTone(100, 'sawtooth', 1.0); }
+}
+
+/* =========================================
+   GAME CLASSES (Balloon, Particle, Game)
+   ========================================= */
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = Math.random() * 8 - 4;
+        this.vy = Math.random() * -8 - 4;
+        this.radius = Math.random() * 3 + 1;
+        this.color = color;
+        this.life = 60; 
+        this.g = 0.2; 
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.g;
+        this.life--;
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life / 60);
+        ctx.fillStyle = this.color;
+        
+        // Water droplet look
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 4;
+        
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+class Balloon {
+    constructor(c, r, size, type, color) {
+        this.c = c; this.r = r;
+        this.size = size;
+        this.type = type;
+        this.color = color;
+        this.x = 0; this.y = 0;
+        this.tx = 0; this.ty = 0;
+        this.scale = 1.0; 
+        this.wobble = Math.random() * 6.28;
+        this.wobbleSpeed = Math.random() * 0.05 + 0.05;
+        this.popped = false;
+        this.isSelected = false; 
+        
+        // MOVE BOMB: 8% chance (Common), 12-17 moves duration
+        this.timer = Math.random() < 0.08 ? Math.floor(Math.random() * 6) + 12 : null;
+    }
+    update() {
+        this.x += (this.tx - this.x) * 0.15;
+        this.y += (this.ty - this.y) * 0.15;
+        this.wobble += this.wobbleSpeed;
+        
+        let targetScale = this.popped ? 0 : (this.isSelected ? 1.15 : 1.0); 
+        this.scale += (targetScale - this.scale) * 0.2;
+    }
+    draw(ctx) {
+        if(this.scale <= 0) return;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(this.scale, this.scale);
+        
+        // Water Balloon Physics: Squishy look (continuous jiggle)
+        let r = this.size/2 - 2;
+        let sx = 1 + Math.sin(this.wobble)*0.03;
+        let sy = 1 + Math.cos(this.wobble)*0.05;
+        ctx.scale(sx, sy);
+        
+        // --- BALLOON BODY (TEARDROP SHAPE) ---
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.9);
+        ctx.bezierCurveTo(r * 1.3, -r * 0.5, r * 1.1, r * 0.8, 0, r);
+        ctx.bezierCurveTo(-r * 1.1, r * 0.8, -r * 1.3, -r * 0.5, 0, -r * 0.9);
+        
+        let grad = ctx.createRadialGradient(-r*0.3, -r*0.3, r*0.2, 0, 0, r);
+        grad.addColorStop(0, "rgba(255,255,255,0.8)");
+        grad.addColorStop(0.2, this.color);
+        grad.addColorStop(1, this.darkenColor(this.color, -50));
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // --- KNOT ---
+        ctx.fillStyle = this.darkenColor(this.color, -20);
+        ctx.beginPath(); ctx.arc(0, -r*0.9, 4, 0, Math.PI*2); ctx.fill();
+
+        // --- TIMER OVERLAY (MOVE BOMB) ---
+        if(this.timer !== null) {
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle = this.timer <= 2 ? "#e74c3c" : "#fff";
+            ctx.font = "bold 16px 'Open Sans'";
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(this.timer, 0, 2);
+            
+            if(this.timer <= 2) {
+                ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(0,0, 16 + Math.sin(Date.now()/100)*2, 0, Math.PI*2); ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+    darkenColor(color, percent) {
+        let num = parseInt(color.replace("#",""),16),
+        amt = Math.round(2.55 * percent),
+        R = (num >> 16) + amt,
+        B = (num >> 8 & 0x00FF) + amt,
+        G = (num & 0x0000FF) + amt;
+        return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1);
+    }
+}
+
+class Background {
+    constructor(canvas, game) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.game = game;
+        this.clouds = [];
+        for(let i=0; i<5; i++) this.clouds.push({x: Math.random()*canvas.width, y: Math.random()*200, s: Math.random()*0.5+0.5});
+    }
+
+    draw() {
+        const w = this.canvas.width; const h = this.canvas.height;
+        const ctx = this.ctx;
+        const theme = this.game.themes[this.game.currentTheme];
+        
+        let g = ctx.createLinearGradient(0,0,0,h); 
+        g.addColorStop(0, theme.bg[0]); g.addColorStop(1, theme.bg[1]);
+        ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+
+        // Sun/Moon
+        ctx.fillStyle = theme.bg[2] === '#1f3542' ? "#f1c40f" : "#FFD700";
+        ctx.beginPath(); ctx.arc(w-80, 80, 40, 0, Math.PI*2); ctx.fill();
+
+        // Clouds (only for lighter themes)
+        if(theme.bg[0] !== '#0f2027' && theme.bg[0] !== '#440000' && theme.bg[0] !== '#000000') {
+            ctx.fillStyle = "rgba(255,255,255,0.6)";
+            this.clouds.forEach(c => {
+                c.x += 0.2; if(c.x > w+100) c.x = -100;
+                ctx.save(); ctx.translate(c.x, c.y); ctx.scale(c.s, c.s);
+                ctx.beginPath(); ctx.arc(0,0,30,0,Math.PI*2); ctx.arc(40,0,40,0,Math.PI*2); ctx.arc(80,0,30,0,Math.PI*2); ctx.fill();
+                ctx.restore();
+            });
+        }
+        
+        // Ground/Hill/Sand
+        ctx.fillStyle = theme.bg[2]; 
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        ctx.lineTo(0, h-100);
+        ctx.bezierCurveTo(w/3, h-200, w/1.5, h-50, w, h-120);
+        ctx.lineTo(w, h);
+        ctx.fill();
+
+        // Ground Shadow/Second Layer
+        ctx.fillStyle = this.darkenColor(theme.bg[2], -30);
+        ctx.beginPath();
+        ctx.moveTo(0, h-80);
+        ctx.bezierCurveTo(w/4, h-140, w*3/4, h-90, w, h-70);
+        ctx.lineTo(w, h); ctx.lineTo(0, h);
+        ctx.fill();
+    }
+    darkenColor(c, p) {
+        let n = parseInt(c.replace("#",""),16), a = Math.round(2.55 * p);
+        let R = (n >> 16) + a, B = (n >> 8 & 0x00FF) + a, G = (n & 0x0000FF) + a;
+        return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1);
+    }
+}
+
+class Game {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.audio = new AudioController();
+        this.leaderboard = JSON.parse(localStorage.getItem('sc_lb') || '[]');
+        this.currentTheme = localStorage.getItem('sc_theme') || 'day';
+        
+        // Highly contrasting and distinct color palette
+        const HIGH_CONTRAST_COLORS = ['#FF3366', '#33CCFF', '#66FF33', '#FFFF66', '#FF33CC']; // Red, Blue, Green, Yellow, Magenta
+
+        // 10 Themes (The 'day' theme is replaced with 'Tropical Beach' as default)
+        this.themes = {
+            'day':    { name: 'Tropical Beach', bg: ['#00b894', '#81ecec', '#f9ca24'], colors: HIGH_CONTRAST_COLORS },
+            'sunset': { name: 'Sunset', bg: ['#662D8C', '#ED1E79', '#c0392b'], colors: HIGH_CONTRAST_COLORS },
+            'night':  { name: 'Midnight', bg: ['#0f2027', '#2c5364', '#1f3542'], colors: HIGH_CONTRAST_COLORS },
+            'forest': { name: 'Forest', bg: ['#11998e', '#38ef7d', '#16a085'], colors: HIGH_CONTRAST_COLORS },
+            'lava':   { name: 'Volcano', bg: ['#440000', '#FF4500', '#B22222'], colors: HIGH_CONTRAST_COLORS },
+            'ocean':  { name: 'Deep Sea', bg: ['#005A9C', '#007AA5', '#00BCD4'], colors: HIGH_CONTRAST_COLORS }, 
+            'pastel': { name: 'Pastel Dreams', bg: ['#FAD0C4', '#FFD1FF', '#FFB7C5'], colors: HIGH_CONTRAST_COLORS },
+            'retro':  { name: 'Retro Pop', bg: ['#FF00FF', '#00FFFF', '#FF9900'], colors: HIGH_CONTRAST_COLORS },
+            'space':  { name: 'Outer Space', bg: ['#000000', '#1C003D', '#4B0082'], colors: HIGH_CONTRAST_COLORS },
+            'grape':  { name: 'Grape Vine', bg: ['#4B0082', '#6A0DAD', '#800080'], colors: HIGH_CONTRAST_COLORS } 
+        };
+
+        this.bg = new Background(this.canvas, this);
+        this.score = 0;
+        this.state = 'MENU'; // States: 'MENU', 'TUTORIAL', 'PLAY', 'PAUSED', 'GAMEOVER'
+        this.grid = [];
+        this.chain = [];
+        this.particles = []; 
+        this.tutorialChain = [];
+        this.tutorialTimer = 0;
+
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.initInput();
+        this.initUI();
+        window.addEventListener('keydown', (e) => this.handleKeyPress(e)); // Escape Key Listener
+        this.loop();
+    }
+    
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        
+        let minDim = Math.min(this.canvas.width, this.canvas.height);
+        this.cellSize = Math.floor((minDim * 0.8) / (ROWS));
+        if(this.cellSize > 75) this.cellSize = 75;
+        
+        let gw = this.cellSize * COLS;
+        let gh = this.cellSize * ROWS;
+        this.offsetX = (this.canvas.width - gw) / 2;
+        this.offsetY = (this.canvas.height - gh) / 2 + 20;
+
+        this.jarW = gw + 40;
+        this.jarH = gh + 100;
+        this.jarX = this.offsetX - 20;
+        this.jarY = this.offsetY - 80;
+
+        if(this.grid.length) {
+            for(let c=0; c<COLS; c++) {
+                for(let r=0; r<ROWS; r++) {
+                    let b = this.grid[c][r];
+                    if(b) {
+                        b.size = this.cellSize;
+                        b.tx = this.offsetX + c*this.cellSize + this.cellSize/2;
+                        b.ty = this.offsetY + r*this.cellSize + this.cellSize/2;
+                        // Keep x,y smooth transition for resizing effect
+                        if(this.state === 'MENU') {
+                            b.x = b.tx; 
+                            b.y = b.ty;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    start() {
+        this.score = 0;
+        document.getElementById('score-display').innerText = 0;
+        this.grid = [];
+        this.chain = [];
+        this.particles = [];
+
+        const colors = this.themes[this.currentTheme].colors;
+        const tutColorIndex = 0; // Force the first color for the tutorial (Red by default)
+
+        for(let c=0; c<COLS; c++) {
+            this.grid[c] = [];
+            for(let r=0; r<ROWS; r++) {
+                // Force a 3-long horizontal match in the center for the tutorial hint
+                let isTutorialSpot = (r === ROWS - 2 && c >= 1 && c <= 3); 
+                if (isTutorialSpot) {
+                    this.spawnBalloon(c, r, true, tutColorIndex);
+                } else {
+                    this.spawnBalloon(c, r, true);
+                }
+            }
+        }
+        
+        // Transition to tutorial state
+        this.state = 'TUTORIAL';
+        this.tutorialChain = [];
+        this.tutorialTimer = 0;
+        // Coordinates for the tutorial animation (Center-Bottom)
+        this.tutorialBalloonIndices = [[1, ROWS - 2], [2, ROWS - 2], [3, ROWS - 2]]; 
+        
+        this.toggleMenu('main-menu', false);
+        this.toggleMenu('hud-layer', true); // Show HUD but not the grid is interactive yet
+        this.toggleMenu('tutorial-layer', true); // Show the tutorial overlay for the click/tap to start
+    }
+
+    // Updated spawnBalloon to optionally force a color type
+    spawnBalloon(c, r, instant, forceColorType = -1) {
+        const colors = this.themes[this.currentTheme].colors;
+        const type = forceColorType !== -1 ? forceColorType : Math.floor(Math.random() * colors.length);
+        let b = new Balloon(c, r, this.cellSize, type, colors[type]);
+        
+        b.tx = this.offsetX + c*this.cellSize + this.cellSize/2;
+        b.ty = this.offsetY + r*this.cellSize + this.cellSize/2;
+        b.x = b.tx;
+        b.y = instant ? b.ty : this.jarY - 50 - Math.random() * 50; 
+        this.grid[c][r] = b;
+    }
+
+    decrementTimers() {
+        if(this.state !== 'PLAY') return;
+        let fail = false;
+        let warned = false;
+        for(let c=0; c<COLS; c++) {
+            for(let r=0; r<ROWS; r++) {
+                let b = this.grid[c][r];
+                if(b && !b.popped && b.timer !== null) {
+                    b.timer--;
+                    if(b.timer <= 2) warned = true;
+                    if(b.timer < 0) {
+                        fail = true;
+                        b.popped = true; 
+                    }
+                }
+            }
+        }
+        if (warned) this.audio.sfxWarn();
+        if(fail) this.handleGameOver("A Move Bomb exploded!");
+    }
+
+    applyGravity() {
+        for(let c=0; c<COLS; c++) {
+            let col = [];
+            for(let r=0; r<ROWS; r++) {
+                if(this.grid[c][r] && !this.grid[c][r].popped) col.push(this.grid[c][r]);
+            }
+            while(col.length < ROWS) {
+                this.spawnBalloon(c, 0, false);
+                col.unshift(this.grid[c][0]);
+            }
+            for(let r=0; r<ROWS; r++) {
+                let b = col[r];
+                b.c = c; b.r = r;
+                b.tx = this.offsetX + c*this.cellSize + this.cellSize/2;
+                b.ty = this.offsetY + r*this.cellSize + this.cellSize/2;
+                this.grid[c][r] = b;
+            }
+        }
+    }
+
+    handleGameOver(reason) {
+        this.state = 'GAMEOVER';
+        this.audio.sfxOver();
+        document.getElementById('fail-msg').innerText = reason;
+        document.getElementById('final-score').innerText = this.score;
+        document.getElementById('best-score').innerText = this.leaderboard.length ? this.leaderboard[0].score : this.score;
+        
+        this.toggleMenu('hud-layer', false);
+        if(this.leaderboard.length < 5 || this.score > this.leaderboard[this.leaderboard.length-1].score) {
+            this.toggleMenu('name-input-menu', true);
+            document.getElementById('name-input-field').value = '';
+        } else {
+            this.toggleMenu('game-over-menu', true);
+        }
+    }
+
+    toggleMenu(id, show) {
+        const el = document.getElementById(id);
+        if(show) el.classList.remove('hidden'); else el.classList.add('hidden');
+    }
+
+    initInput() {
+        const handler = (e) => {
+            
+            // Only allow game input if PLAYING. Tutorial interaction is handled separately on #tutorial-layer div.
+            if(this.state !== 'PLAY') return; 
+
+            const r = this.canvas.getBoundingClientRect();
+            const x = (e.touches?e.touches[0].clientX:e.clientX) - r.left;
+            const y = (e.touches?e.touches[0].clientY:e.clientY) - r.top;
+            
+            if(x<this.offsetX || x>this.offsetX+COLS*this.cellSize) return;
+            if(y<this.offsetY || y>this.offsetY+ROWS*this.cellSize) return;
+            
+            let c = Math.floor((x-this.offsetX)/this.cellSize);
+            let row = Math.floor((y-this.offsetY)/this.cellSize);
+            
+            if(c < 0 || c >= COLS || row < 0 || row >= ROWS) return;
+
+            let b = this.grid[c][row];
+            if(!b || b.popped) return;
+            
+            if(this.chain.length === 0) {
+                this.chain.push(b);
+                this.audio.sfxConnect();
+            } else {
+                let last = this.chain[this.chain.length-1];
+                let isAdjacent = Math.abs(b.c - last.c) <= 1 && Math.abs(b.r - last.r) <= 1;
+
+                if (this.chain.length > 1 && b === this.chain[this.chain.length-2]) {
+                    // Go back one step
+                    this.chain.pop(); 
+                    this.audio.sfxConnect();
+                    return; 
+                }
+                
+                if(b !== last && isAdjacent && !this.chain.includes(b)) {
+                    if(b.type === last.type) {
+                        this.chain.push(b);
+                        this.audio.sfxConnect();
+                    }
+                }
+            }
+        };
+        
+        const end = () => {
+            if(this.state !== 'PLAY') return;
+            if(this.chain.length >= 3) {
+                
+                // IMPORTANT: Decrement timer balloons on successful move/pop
+                this.decrementTimers(); 
+                
+                this.chain.forEach((b, i) => {
+                    b.popped = true;
+                    this.score += 10 + i*5;
+                    this.audio.sfxPop(i);
+                    // Spawn Water Particles for splash animation
+                    for(let j=0; j<15; j++) {
+                        this.particles.push(new Particle(b.x, b.y, b.color));
+                    }
+                });
+                document.getElementById('score-display').innerText = this.score;
+                setTimeout(() => this.applyGravity(), 300);
+            }
+            this.chain = [];
+        };
+        
+        this.canvas.addEventListener('mousedown', (e)=>{this.d=true; handler(e)});
+        this.canvas.addEventListener('mousemove', (e)=>{if(this.d)handler(e)});
+        window.addEventListener('mouseup', ()=>{this.d=false; end()});
+        this.canvas.addEventListener('touchstart', (e)=>{e.preventDefault();this.d=true; handler(e)},{passive:false});
+        this.canvas.addEventListener('touchmove', (e)=>{e.preventDefault();if(this.d)handler(e)},{passive:false});
+        window.addEventListener('touchend', ()=>{this.d=false; end()});
+    }
+
+    // New: Escape Key Handler
+    handleKeyPress(e) {
+        if (e.key === 'Escape') {
+            this.audio.sfxClick();
+
+            if (this.state === 'PLAY') {
+                this.state = 'PAUSED'; 
+                this.toggleMenu('pause-menu', true); 
+                return;
+            }
+
+            if (this.state === 'PAUSED') {
+                this.state = 'PLAY'; 
+                this.toggleMenu('pause-menu', false); 
+                return;
+            }
+            
+            // Close open sub-menus and go to Main Menu/Game Over Menu
+            const menus = ['theme-menu', 'leaderboard-menu', 'info-menu'];
+
+            for (const menuId of menus) {
+                const menuEl = document.getElementById(menuId);
+                if (!menuEl.classList.contains('hidden')) {
+                    this.toggleMenu(menuId, false);
+                    this.toggleMenu('main-menu', true);
+                    return; 
+                }
+            }
+            
+            // If Game Over is showing, go to Main Menu
+            if (this.state === 'GAMEOVER' && !document.getElementById('game-over-menu').classList.contains('hidden')) {
+                this.toggleMenu('game-over-menu', false);
+                this.toggleMenu('main-menu', true);
+            }
+        }
+    }
+
+    initUI() {
+        const click = (id, cb) => document.getElementById(id).addEventListener('click', (e) => { e.stopPropagation(); this.audio.sfxClick(); cb(); });
+        
+        // Menu Clicks
+        click('play-btn', () => { this.start(); }); // Now calls start which goes to TUTORIAL
+        click('theme-menu-btn', () => { this.toggleMenu('main-menu', false); this.toggleMenu('theme-menu', true); });
+        click('close-theme-btn', () => { this.toggleMenu('theme-menu', false); this.toggleMenu('main-menu', true); });
+        click('leaderboard-btn', () => { 
+            this.toggleMenu('main-menu', false); this.toggleMenu('leaderboard-menu', true);
+            const l = document.getElementById('leaderboard-list'); l.innerHTML = '';
+            this.leaderboard.forEach((s,i) => l.innerHTML += `<li class="lb-item"><span class="lb-rank">#${i+1}</span><span class="lb-name">${s.name}</span><span class="lb-score">${s.score}</span></li>`);
+        });
+        click('close-leaderboard-btn', () => { this.toggleMenu('leaderboard-menu', false); this.toggleMenu('main-menu', true); });
+        click('info-btn', () => { this.toggleMenu('main-menu', false); this.toggleMenu('info-menu', true); });
+        click('close-info-btn', () => { this.toggleMenu('info-menu', false); this.toggleMenu('main-menu', true); });
+
+        // Pause/Quit
+        click('pause-btn', () => { 
+            if(this.state === 'PLAY') { 
+                this.state = 'PAUSED'; 
+                this.toggleMenu('pause-menu', true); 
+            }
+        });
+        click('resume-btn', () => { 
+            this.state = 'PLAY'; 
+            this.toggleMenu('pause-menu', false); 
+        });
+        click('quit-save-btn', () => { 
+            this.toggleMenu('pause-menu', false); 
+            this.handleGameOver("Game Quit");
+            this.state = 'MENU';
+        });
+
+        // Game Over/Name Input
+        click('retry-btn', () => { this.toggleMenu('game-over-menu', false); this.toggleMenu('hud-layer', true); this.start(); });
+        click('home-btn', () => { this.toggleMenu('game-over-menu', false); this.toggleMenu('main-menu', true); });
+        click('submit-name-btn', () => {
+            const n = document.getElementById('name-input-field').value.trim() || "PLAYER";
+            this.leaderboard.push({name:n, score:this.score});
+            this.leaderboard.sort((a,b)=>b.score-a.score);
+            this.leaderboard = this.leaderboard.slice(0,5);
+            localStorage.setItem('sc_lb', JSON.stringify(this.leaderboard));
+            this.toggleMenu('name-input-menu', false);
+            this.toggleMenu('game-over-menu', true);
+        });
+        
+        // Sound Button Toggle
+        const soundBtn = document.getElementById('sound-btn');
+        const updateSoundIcon = (m) => {
+            document.getElementById('icon-sound-on').style.display = m ? 'none' : 'block';
+            document.getElementById('icon-sound-off').style.display = m ? 'block' : 'none';
+        }
+        updateSoundIcon(this.audio.muted);
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            this.audio.sfxClick();
+            const m = this.audio.toggleMute();
+            updateSoundIcon(m);
+        });
+
+        // NEW: Tutorial Layer Click Handler to start the game
+        document.getElementById('tutorial-layer').addEventListener('click', () => {
+            if(this.state === 'TUTORIAL') {
+                this.state = 'PLAY';
+                this.tutorialChain = []; // Clear the hint
+                this.audio.sfxClick();
+                this.toggleMenu('tutorial-layer', false);
+            }
+        });
+
+        // Generate Themes Grid
+        const tg = document.getElementById('theme-grid');
+        tg.innerHTML = ''; // Clear previous if any
+        for(let id in this.themes) {
+            const t = this.themes[id];
+            let d = document.createElement('div'); d.className = 'theme-opt';
+            d.style.background = `linear-gradient(45deg, ${t.bg[0]}, ${t.bg[1]})`;
+            d.innerText = t.name;
+            d.dataset.theme = id;
+            if(id === this.currentTheme) d.classList.add('selected');
+
+            d.onclick = () => { 
+                this.currentTheme = id; 
+                localStorage.setItem('sc_theme', id);
+                this.audio.sfxClick();
+                document.querySelectorAll('.theme-opt').forEach(opt => opt.classList.remove('selected'));
+                d.classList.add('selected');
+                if(this.state === 'PLAY') this.start();
+            };
+            tg.appendChild(d);
+        }
+    }
+    
+    // NEW: Detailed Jar Drawing Function
+    drawGlassJar() {
+        const ctx = this.ctx;
+        const x = this.jarX;
+        const y = this.jarY;
+        const w = this.jarW;
+        const h = this.jarH;
+        const radius = 20;
+        const neckY = y + 15; // Point where the neck starts to narrow slightly
+        const lipH = 8; // Height of the top lip
+        const lipY = y - lipH; // Top position of the lip
+
+        ctx.save();
+        
+        // --- 1. DRAW BASE/SHADOW ---
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 30;
+        ctx.shadowOffsetY = 15;
+        
+        // Jar Body Path (Rounded bottom)
+        ctx.beginPath();
+        ctx.moveTo(x, neckY);
+        ctx.lineTo(x, y + h - radius);
+        ctx.arcTo(x, y + h, x + radius, y + h, radius);
+        ctx.arcTo(x + w, y + h, x + w, y + h - radius, radius);
+        ctx.lineTo(x + w, neckY);
+        ctx.closePath();
+        
+        // Jar Inner Fill (For the overall glass tint)
+        ctx.fillStyle = 'rgba(170, 210, 255, 0.1)'; 
+        ctx.fill();
+
+        // --- 2. DRAW WATER LEVEL (WITH JIGGLE) ---
+        ctx.shadowColor = 'transparent'; 
+        
+        const waterHeight = h - 15; 
+        const wave = Math.sin(Date.now() / 300) * 3; 
+        const baseLevel = y + waterHeight; 
+
+        // Water Fill
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x + w, baseLevel);
+        ctx.bezierCurveTo(
+            x + w * 0.75, baseLevel + wave, 
+            x + w * 0.25, baseLevel - wave, 
+            x, baseLevel
+        );
+        ctx.closePath();
+        
+        // Gradient for a deep water look
+        let waterGrad = ctx.createLinearGradient(0, baseLevel, 0, y + h);
+        waterGrad.addColorStop(0, 'rgba(52, 152, 219, 0.7)'); 
+        waterGrad.addColorStop(1, 'rgba(41, 128, 185, 0.8)'); 
+        ctx.fillStyle = waterGrad;
+        ctx.fill();
+        
+        // --- 3. DRAW GLASS FRAME AND HIGHLIGHTS ---
+
+        // Glass Edge (Stroke)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Water surface highlight (reflections)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 5, baseLevel + wave - 2);
+        ctx.lineTo(x + w - 5, baseLevel + wave + 2);
+        ctx.stroke();
+        
+        // Main Light Reflection Arc (For glossy effect)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 100);
+        ctx.bezierCurveTo(x + 20, y + 50, x + 20, y + h * 0.7, x + 10, y + h * 0.9);
+        ctx.stroke();
+
+
+        // --- 4. POLISHED TOP LIP ---
+        const rimW = w + 10;
+        
+        // 4a. Inner Rim Shadow (Upper part of the neck)
+        ctx.beginPath();
+        ctx.rect(x-5, lipY + lipH, rimW, neckY - (lipY + lipH));
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fill();
+
+        // 4b. Inner Lip Ellipse (Bottom of the lip)
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, y, rimW / 2, lipH/2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fill();
+
+        // 4c. Top Lip Ellipse (Main Highlight)
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, lipY, rimW / 2, lipH/2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.restore();
+    }
+    
+    // NEW: Tutorial Drawing Function (Only draws visual hint and a prompt, no full instruction box)
+    drawTutorial() {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        
+        // --- 1. Tutorial Animation/Hint ---
+        this.tutorialTimer++;
+        
+        // Animate the chain connection every 20 frames, and reset every 100 frames
+        if(this.tutorialTimer % 20 === 0) {
+            if(this.tutorialChain.length < this.tutorialBalloonIndices.length) {
+                const [c, r] = this.tutorialBalloonIndices[this.tutorialChain.length];
+                const b = this.grid[c][r];
+                if(b) this.tutorialChain.push(b);
+            } else if (this.tutorialChain.length >= this.tutorialBalloonIndices.length) {
+                 if(this.tutorialTimer % 100 === 0) {
+                    this.tutorialChain = [];
+                    this.tutorialTimer = 0; // Reset timer to loop the animation smoothly
+                 }
+            }
+        }
+        
+        // Draw the connecting chain visually (Same as game, but distinct color/thickness)
+        if (this.tutorialChain.length > 1) {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.9)"; // Bright white for hint
+            ctx.lineWidth = 15; 
+            ctx.lineCap = 'round'; 
+            ctx.lineJoin = 'round';
+            ctx.filter = 'blur(2px) drop-shadow(0 0 12px rgba(255, 255, 255, 1))'; 
+            
+            ctx.beginPath();
+            ctx.moveTo(this.tutorialChain[0].x, this.tutorialChain[0].y);
+            for(let i=1; i<this.tutorialChain.length; i++) {
+                ctx.lineTo(this.tutorialChain[i].x, this.tutorialChain[i].y);
+            }
+            ctx.stroke();
+            ctx.filter = 'none'; 
+            
+            // Draw a pointer/finger to show the action
+            const last = this.tutorialChain[this.tutorialChain.length - 1];
+            const fingerSize = 30;
+            ctx.save();
+            ctx.translate(last.x, last.y);
+            ctx.rotate(Math.PI / 4); // Rotate to look like a finger dragging
+            ctx.fillStyle = '#f1c40f'; // Yellow for attention
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.moveTo(fingerSize * 0.4, -fingerSize);
+            ctx.lineTo(fingerSize * 0.4, 0);
+            ctx.arc(0, 0, fingerSize * 0.4, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // --- 2. Minimal Prompt ---
+        ctx.save();
+        const promptY = this.offsetY + ROWS * this.cellSize + 50;
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold 24px 'Sigmar One'`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Flashing "Tap to Play" button
+        const alpha = 0.5 + Math.abs(Math.sin(Date.now()/300)) * 0.5;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = `#33CCFF`;
+        ctx.fillText('Tap Anywhere to Play!', w / 2, promptY + 20);
+        ctx.globalAlpha = 1.0;
+        
+        ctx.restore();
+    }
+
+    loop() {
+        this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+        this.bg.draw(); 
+        
+        if(this.state !== 'MENU') {
+            
+            // Update selection status for zoom effect
+            for(let c=0; c<COLS; c++) {
+                for(let r=0; r<ROWS; r++) {
+                    let b = this.grid[c][r];
+                    if(b) b.isSelected = this.chain.includes(b);
+                }
+            }
+            
+            // Update and draw particles (water splash animation)
+            for (let i = 0; i < this.particles.length; i++) {
+                this.particles[i].update();
+                this.particles[i].draw(this.ctx);
+                if(this.particles[i].life <= 0) {
+                    this.particles.splice(i, 1);
+                    i--;
+                }
+            }
+
+            this.drawGlassJar();
+            
+            // --- Draw Animated Water Connector (Water Fluid Effect) ---
+            if(this.chain.length > 1) {
+                this.ctx.strokeStyle = "rgba(52, 152, 219, 0.9)"; 
+                this.ctx.lineWidth = 10; 
+                this.ctx.lineCap = 'round'; 
+                this.ctx.lineJoin = 'round';
+                this.ctx.filter = 'blur(1px) drop-shadow(0 0 8px rgba(52, 152, 219, 1))'; 
+                
+                const time = Date.now() / 150;
+                this.ctx.beginPath();
+                
+                this.ctx.moveTo(this.chain[0].x, this.chain[0].y);
+                
+                for(let i=1; i<this.chain.length; i++) {
+                    const p1 = this.chain[i-1];
+                    const p2 = this.chain[i];
+                    
+                    const mx = (p1.x + p2.x) / 2;
+                    const my = (p1.y + p2.y) / 2;
+
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    const nx = -dy / dist;
+                    const ny = dx / dist;
+
+                    const wobbleMag = Math.sin(time + i * 0.8) * 4; 
+
+                    const cx = mx + nx * wobbleMag;
+                    const cy = my + ny * wobbleMag;
+
+                    this.ctx.quadraticCurveTo(cx, cy, p2.x, p2.y);
+                }
+                this.ctx.stroke();
+                this.ctx.filter = 'none'; 
+            }
+
+            // Draw Balloons (Update and Draw)
+            for(let c=0; c<COLS; c++) {
+                for(let r=0; r<ROWS; r++) {
+                    if(this.grid[c] && this.grid[c][r]) {
+                        if(this.state === 'PLAY') this.grid[c][r].update();
+                        // In tutorial, force selection of the hint balloons
+                        if (this.state === 'TUTORIAL') {
+                            this.grid[c][r].isSelected = this.tutorialChain.includes(this.grid[c][r]);
+                        }
+                        this.grid[c][r].draw(this.ctx);
+                    }
+                }
+            }
+            
+            if (this.state === 'TUTORIAL') {
+                this.drawTutorial();
+            }
+        }
+        requestAnimationFrame(() => this.loop());
+    }
+}
+
+// Global hook for start
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.arcTo(x+w, y, x+w, y+h, r);
+    this.arcTo(x+w, y+h, x, y+h, r);
+    this.arcTo(x, y+h, x, y, r);
+    this.arcTo(x, y, x+w, y, r);
+    this.closePath();
+    return this;
+}
+window.onload = () => { window.game = new Game(); };
+</script>
+</body>
+</html>

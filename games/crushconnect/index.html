@@ -1,0 +1,2384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Crush Connect Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- THEME VARIABLES (Default: Midnight Sky - HIGH CONTRAST) --- */
+        :root {
+            --bg-primary: #0D1117; /* Dark GitHub Black */
+            --bg-secondary: #161B22; 
+            --grid-bg: #21262D; 
+            --menu-overlay: rgba(0, 0, 0, 0.95);
+            --border-color: #58A6FF; /* Blue Accent */
+            --primary: #58A6FF; 
+            --accent: #FF5733; /* Stronger Red-Orange Accent for contrast */
+            --text-color: #C9D1D9;
+            --bacteria-color: #111111; /* Black Bacteria Color */
+            --font-main: 'Roboto', sans-serif;
+            --font-display: 'Montserrat', sans-serif;
+            --gem-shadow-subtle: 0 0 8px rgba(255, 255, 255, 0.1); /* Subtle Ambient Glow */
+            /* --- HIGH CONTRAST GEM COLORS --- */
+            --gem-color-0: '#FF3333'; 
+            --gem-color-1: '#33FF33'; 
+            --gem-color-2: '#3333FF'; 
+            --gem-color-3: '#FFB733'; 
+            --gem-color-4: '#9933FF'; 
+            --gem-color-5: '#F0F0F0'; 
+        }
+        
+        body {
+            margin: 0;
+            background: var(--bg-primary); 
+            background-image: radial-gradient(var(--bg-secondary) 1px, transparent 0), radial-gradient(var(--bg-secondary) 1px, transparent 0);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            color: var(--text-color);
+            font-family: var(--font-main); 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+            touch-action: none; 
+            transition: background-color 0.5s;
+        }
+        
+        /* --- LAYOUT & CANVAS FIX: Aggressively fit to viewport --- */
+        #game-container {
+            position: relative;
+            width: 95vw; 
+            height: 95vh;
+            display: flex;
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: center;
+            max-width: 900px;
+        }
+
+        /* Inner container to hold canvas */
+        #canvas-wrapper {
+            flex-grow: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0; 
+            width: 100%; 
+            max-height: 80vh; 
+            min-height: 0; 
+            overflow: hidden;
+            margin-top: 5px; /* Small buffer between HUD and canvas */
+        }
+        
+        canvas {
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            background: var(--grid-bg);
+            border: 5px solid var(--border-color);
+            z-index: 1;
+            transition: border-color 0.5s;
+        }
+
+        /* --- HUD (IN-GAME UI) --- */
+        #hud {
+            position: relative; 
+            width: 100%; 
+            min-height: 60px; 
+            padding: 10px 0;
+            box-sizing: border-box;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.3s;
+            z-index: 20;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        .hud-left { 
+            display: flex; 
+            gap: 10px; 
+            pointer-events: auto; 
+            align-items: center; 
+            justify-content: flex-start; 
+        }
+        
+        .hud-right { 
+            pointer-events: auto; 
+            justify-content: flex-end; 
+            display: flex; 
+            align-items: center;
+        } 
+        
+        .stat-box {
+            background: var(--bg-secondary); 
+            color: var(--text-color);
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            font-family: var(--font-main); 
+            text-align: center; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 70px;
+            height: 50px; 
+            justify-content: center;
+        }
+
+        .stat-label { 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            color: var(--accent);
+            margin-bottom: 3px;
+        }
+        
+        .stat-value { 
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            color: var(--primary);
+        }
+        
+        .btn.hud-menu {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: 1px solid var(--bg-primary);
+            width: 50px; 
+            height: 50px; 
+            padding: 0;
+            margin: 0;
+            font-size: 1.2rem;
+            line-height: 50px;
+            align-self: center;
+            border-radius: 8px; 
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn.hud-menu:hover { background: var(--primary); }
+        .btn.hud-menu:active { transform: scale(0.95); }
+        
+        /* --- MENU STYLES --- */
+        .ui-layer {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--menu-overlay); 
+        }
+        
+        .interactive { pointer-events: auto; }
+
+        .menu-box {
+            background: var(--bg-secondary); 
+            border: 3px solid var(--primary);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            animation: menu-fade-in 0.5s ease-out forwards; 
+            max-width: 480px;
+            width: 90%;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Spacing between sections */
+        }
+        
+        /* New Menu Structure CSS */
+        .menu-header {
+            margin-bottom: 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 2.8rem;
+            margin: 0;
+            color: var(--primary);
+            text-shadow: 0 0 15px rgba(88, 166, 255, 0.4); 
+            line-height: 1.1;
+        }
+        
+        .menu-subtitle {
+            margin-top: 5px;
+            letter-spacing: 2px; 
+            font-size: 0.85rem; 
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .menu-actions-primary {
+            width: 100%;
+        }
+
+        .menu-actions-secondary {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr; /* Theme button takes more space */
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: var(--bg-primary); 
+            border: 2px solid var(--text-color);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px rgba(0,0,0,0.3);
+            font-weight: bold;
+        }
+
+        .btn-start {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+            font-size: 1.4rem;
+            padding: 18px;
+            box-shadow: 0 0 20px rgba(255, 87, 51, 0.4);
+            animation: pulse-btn 2s infinite;
+        }
+        
+        .btn-start:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(88, 166, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .btn:hover { background: var(--border-color); color: var(--bg-primary); border-color: var(--border-color); }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+        
+        .btn-icon {
+            padding: 0;
+            height: 50px; /* Same height as theme button row */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-theme {
+            height: 50px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .sound-on i { color: #33FF33; }
+        .sound-off i { color: #FF3333; } 
+
+        @keyframes pulse-btn {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 87, 51, 0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 0 30px rgba(255, 87, 51, 0.7); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 87, 51, 0.4); }
+        }
+
+        /* --- Theme Selection Grid --- */
+        #themeGrid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .theme-option {
+            width: 100%;
+            padding-bottom: 100%;
+            position: relative;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 3px solid transparent; 
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        
+        .theme-option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--primary);
+        }
+        
+        .theme-option.selected {
+            border-color: var(--accent); 
+            box-shadow: 0 0 20px var(--accent);
+            transform: scale(1.02);
+        }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        
+        @keyframes menu-fade-in {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* --- Instructional Hint Style --- */
+        #instructionalOverlay {
+            background: none; 
+            pointer-events: none;
+            z-index: 50; 
+        }
+        
+        #instructionalBox {
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            max-width: 80%;
+            border-radius: 10px;
+            box-shadow: 0 0 15px var(--primary);
+            animation: none;
+            position: relative; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    
+    <div id="hud" class="hidden">
+        <div class="hud-left">
+            <div class="stat-box">
+                <div class="stat-label">Level</div>
+                <div class="stat-value" id="levelDisplay">1</div>
+            </div>
+            <div class="stat-box" id="bacteriaBox">
+                <div class="stat-label">Bacteria Goal</div>
+                <div class="stat-value" id="bacteriaDisplay">0</div>
+            </div>
+            <div class="stat-box" id="movesBox">
+                <div class="stat-label">Moves Left</div>
+                <div class="stat-value" id="movesDisplay">20</div>
+            </div>
+        </div>
+        <div class="hud-right">
+            <button class="btn interactive hud-menu" onclick="game.togglePause()"><i class="fas fa-pause"></i></button>
+        </div>
+    </div>
+    
+    <div id="canvas-wrapper">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    
+    <div id="shuffleMessage" class="ui-layer hidden" style="z-index: 250;">
+        <div class="menu-box" style="padding: 20px 40px; font-size: 1.5rem; animation: none; max-width: 500px; background: var(--accent); color: var(--bg-primary); border-color: var(--bg-primary); box-shadow: 0 0 20px var(--accent);">
+            SHUFFLING BOARD...
+        </div>
+    </div>
+    
+    <div id="instructionalOverlay" class="ui-layer hidden">
+        <div id="instructionalBox" class="hidden">
+             SWIPE TO CONNECT 3+ GEMS (Any direction)
+        </div>
+    </div>
+
+    <div id="mainMenu" class="ui-layer interactive">
+        <div class="menu-box">
+            
+            <div class="menu-header">
+                <h1>CRUSH CONNECT</h1>
+                <p class="menu-subtitle">MATCH TO CRUSH</p>
+            </div>
+            
+            <div class="menu-actions-primary">
+                <button class="btn btn-start" onclick="game.start()">
+                    <i class="fas fa-play" style="margin-right: 10px;"></i> Start Level 1
+                </button>
+            </div>
+            
+            <div class="menu-actions-secondary">
+                <button class="btn btn-theme" onclick="game.showThemes()">Select Theme</button>
+                <button class="btn btn-icon" onclick="game.showLeaderboard()" title="Leaderboard"><i class="fas fa-chart-line"></i></button>
+                <button id="soundToggleBtn" class="btn btn-icon sound-on" onclick="game.toggleSound()" title="Sound Toggle"><i class="fas fa-volume-up"></i></button>
+                <button class="btn btn-icon" onclick="game.showInfo()" title="Info"><i class="fas fa-book"></i></button>
+            </div>
+
+        </div>
+    </div>
+    
+    <div id="pauseMenu" class="ui-layer interactive hidden">
+        <div class="menu-box">
+            <div class="menu-header" style="border: none; padding-bottom: 0;">
+                <h1 style="font-size: 2.5rem;">PAUSED</h1>
+                <p class="menu-subtitle" style="color: var(--text-color);">Take a break.</p>
+            </div>
+            <button class="btn btn-start" onclick="game.resume()">Resume Game</button>
+            <button class="btn" onclick="game.restartLevel()">Restart Level</button> 
+            <button class="btn" onclick="game.resetToMenu()">Return to Main Menu</button>
+        </div>
+    </div>
+    
+    <div id="leaderboardMenu" class="ui-layer interactive hidden">
+        <div class="menu-box">
+            <h1 style="font-size: 2.5rem;">LEADERBOARD</h1>
+            <p style="margin-bottom: 20px; color: var(--text-color);">Top Players</p>
+            <ul id="leaderboard-list" style="list-style: none; padding: 0; text-align: left; font-family: var(--font-main); color: var(--text-color); font-size: 1.1rem; border-top: 1px solid var(--bg-primary); border-bottom: 1px solid var(--bg-primary); padding: 10px 0;">
+                <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--bg-secondary);"><span>#1 BuntyZZ</span> <span style="color: var(--primary); font-weight: 700;">Level 50</span></li>
+                <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--bg-secondary);"><span>#2 SNHKK</span> <span style="color: var(--accent); font-weight: 700;">Level 47</span></li>
+                <li style="display: flex; justify-content: space-between; padding: 10px 0;"><span>#3 Naino</span> <span style="color: var(--text-color);">Level 45</span></li>
+            </ul>
+            <button class="btn" style="margin-top: 20px;" onclick="game.hideLeaderboard()">Back to Menu</button>
+        </div>
+    </div>
+
+    <div id="gameOverMenu" class="ui-layer interactive hidden">
+        <div class="menu-box">
+            <h1 id="goTitle" style="color: var(--accent);">GAME OVER</h1>
+            <p id="goLevel" style="font-size: 1.8rem; margin-bottom: 25px; color: var(--primary);">Level Reached: 1</p>
+            <button class="btn btn-start" onclick="game.start()">Try Again</button>
+            <button class="btn" onclick="game.resetToMenu()">Main Menu</button>
+        </div>
+    </div>
+
+    <div id="themeMenu" class="ui-layer interactive hidden">
+        <div class="menu-box">
+            <h1 style="font-size: 2.5rem;">THEMES</h1>
+            <p style="margin-bottom: 10px; color: var(--primary);">Current: <span id="currentThemeName">Midnight Sky</span></p>
+            <div id="themeGrid">
+                </div>
+            <button class="btn" onclick="game.hideThemes()">Back to Menu</button>
+        </div>
+    </div>
+    
+    <div id="infoMenu" class="ui-layer interactive hidden">
+        <div class="menu-box">
+            <h1 style="font-size: 2.5rem;">INFO & CREDITS</h1>
+            <p style="margin-bottom: 25px; color: var(--text-color); font-size: 0.9rem;">
+                This is a highly-polished demonstration of the famous concept Crush & Connect.This iv V1 of Crush Connect being published on Naino Games.This is a recreate of the classic made by AI. 
+            </p>
+            <p style="font-size: 1.1rem;">
+                - Developer: Nawab Husnain -
+            </p>
+            <p style="margin-top: 20px;">
+                <a href="https://www.youtube.com/@BuntyZZ" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: bold; font-family: var(--font-main); letter-spacing: 1px;">
+                    SUBSCRIBE to YT Channel "BuntyZZ"
+                </a>
+            </p>
+            <button class="btn" style="margin-top: 30px;" onclick="game.hideInfo()">Back to Menu</button>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+    
+// --- CONSTANTS AND GLOBALS ---
+
+const COLS = 8;
+const ROWS = 8;
+const TYPE_NORMAL = 0;
+const TYPE_LINE_BREAKER_H = 1; // Horizontal Line Clearer
+const TYPE_LINE_BREAKER_V = 2; // Vertical Line Clearer
+const COLOR_BACTERIA = 6; // Bacteria index is now 6 (always last color in the 6-gem pool)
+const BLAST_DURATION = 250; 
+const DROP_DURATION = 350;
+const LEVEL_TRANSITION_DURATION = 1500; 
+const BACTERIA_RISE_DURATION = 400; // NEW: Duration for gem-to-bacteria transformation
+const REQUIRED_MATCH_LENGTH = 3; // Base match length
+
+const LEVEL_DATA = [
+    null, 
+    { moves: 20, bacteria: 5, requiredMatch: REQUIRED_MATCH_LENGTH }, 
+    { moves: 25, bacteria: 8, requiredMatch: REQUIRED_MATCH_LENGTH }, 
+    { moves: 20, bacteria: 12, requiredMatch: REQUIRED_MATCH_LENGTH }, 
+    { moves: 18, bacteria: 15, requiredMatch: REQUIRED_MATCH_LENGTH }, 
+    { moves: 15, bacteria: 18, requiredMatch: REQUIRED_MATCH_LENGTH }, 
+];
+
+// --- 20 HIGH-QUALITY THEME DEFINITIONS ---
+const THEMES = {
+    // --- DEFAULT THEME IMPROVED (HIGH CONTRAST ROUNDED SQUARE GEMS) ---
+    "Midnight Sky": { 
+        '--bg-primary': '#0D1117', '--bg-secondary': '#161B22', '--grid-bg': '#21262D', '--border-color': '#58A6FF', '--primary': '#58A6FF', '--accent': '#FF5733', '--text-color': '#C9D1D9', '--bacteria-color': '#111111',
+        'gem-colors': ['#FF3333', '#33FF33', '#3333FF', '#FFB733', '#9933FF', '#F0F0F0'], 
+    },
+    "Neon Glow": {
+        '--bg-primary': '#000000', '--bg-secondary': '#0A0A0A', '--grid-bg': '#1A1A1A', '--border-color': '#39FF14', '--primary': '#39FF14', '--accent': '#FF00A6', '--text-color': '#FFFFFF', '--bacteria-color': '#111111',
+        'gem-colors': ['#39FF14', '#FF00A6', '#00FFFF', '#FF7A00', '#D300FF', '#FFFFFF'],
+    },
+    "Ocean Deep": {
+        '--bg-primary': '#001F3F', '--bg-secondary': '#003366', '--grid-bg': '#004080', '--border-color': '#4ADEDE', '--primary': '#4ADEDE', '--accent': '#FFD700', '--text-color': '#D3E0EA', '--bacteria-color': '#111111',
+        'gem-colors': ['#4ADEDE', '#1AA7EC', '#33CC33', '#FFD700', '#FF6B6B', '#FFFFFF'],
+    },
+    "Volcanic Ash": {
+        '--bg-primary': '#2C3E50', '--bg-secondary': '#34495E', '--grid-bg': '#496078', '--border-color': '#E74C3C', '--primary': '#E74C3C', '--accent': '#F39C12', '--text-color': '#ECF0F1', '--bacteria-color': '#111111',
+        'gem-colors': ['#E74C3C', '#F39C12', '#2ECC71', '#9B59B6', '#ECF0F1', '#3498DB'],
+    },
+    "Forest Night": {
+        '--bg-primary': '#19281D', '--bg-secondary': '#293C2F', '--grid-bg': '#3A5043', '--border-color': '#88B04B', '--primary': '#88B04B', '--accent': '#FF6F61', '--text-color': '#F0FFF0', '--bacteria-color': '#111111',
+        'gem-colors': ['#88B04B', '#FF6F61', '#4D4DFF', '#FFA07A', '#9370DB', '#F0FFF0'],
+    },
+    "Cyberpunk": {
+        '--bg-primary': '#10061F', '--bg-secondary': '#2A0E40', '--grid-bg': '#4A1D6B', '--border-color': '#FF33F6', '--primary': '#FF33F6', '--accent': '#00E8D9', '--text-color': '#D8BFD8', '--bacteria-color': '#111111',
+        'gem-colors': ['#FF33F6', '#00E8D9', '#FFD700', '#A85DDA', '#FF7F50', '#FFFFFF'],
+    },
+    "Solar Flare": {
+        '--bg-primary': '#1A0000', '--bg-secondary': '#330000', '--grid-bg': '#660000', '--border-color': '#FF8C00', '--primary': '#FF8C00', '--accent': '#FFD700', '--text-color': '#FFEBD7', '--bacteria-color': '#111111',
+        'gem-colors': ['#FF8C00', '#FFD700', '#FF4500', '#DC143C', '#FFFFFF', '#32CD32'],
+    },
+    "Retro Arcade": {
+        '--bg-primary': '#101010', '--bg-secondary': '#222222', '--grid-bg': '#333333', '--border-color': '#00FF00', '--primary': '#00FF00', '--accent': '#FF00FF', '--text-color': '#C0C0C0', '--bacteria-color': '#111111',
+        'gem-colors': ['#00FF00', '#FF00FF', '#FF0000', '#00FFFF', '#FFFF00', '#FFFFFF'],
+    },
+    "Lavender Dusk": {
+        '--bg-primary': '#28243C', '--bg-secondary': '#3F395F', '--grid-bg': '#554D80', '--border-color': '#9370DB', '--primary': '#9370DB', '--accent': '#FF69B4', '--text-color': '#E6E6FA', '--bacteria-color': '#111111',
+        'gem-colors': ['#9370DB', '#FF69B4', '#1E90FF', '#FFD700', '#00CED1', '#E6E6FA'],
+    },
+    "Copper Tech": {
+        '--bg-primary': '#221A0F', '--bg-secondary': '#33271D', '--grid-bg': '#4A3B2B', '--border-color': '#D9882B', '--primary': '#D9882B', '--accent': '#A34F1A', '--text-color': '#FFF8DC', '--bacteria-color': '#111111',
+        'gem-colors': ['#D9882B', '#FFD700', '#A34F1A', '#C0C0C0', '#B8860B', '#FFF8DC'],
+    },
+    "Ice Age": {
+        '--bg-primary': '#1C3144', '--bg-secondary': '#38495A', '--grid-bg': '#546A7B', '--border-color': '#C3E0E5', '--primary': '#C3E0E5', '--accent': '#4F98CA', '--text-color': '#F0F8FF', '--bacteria-color': '#111111',
+        'gem-colors': ['#C3E0E5', '#4F98CA', '#A9C4D2', '#1C3144', '#7FDBFF', '#F0F8FF'],
+    },
+    "Ruby Dragon": {
+        '--bg-primary': '#3C0110', '--bg-secondary': '#5E041E', '--grid-bg': '#80072F', '--border-color': '#FF003C', '--primary': '#FF003C', '--accent': '#FFD700', '--text-color': '#FEECEE', '--bacteria-color': '#111111',
+        'gem-colors': ['#FF003C', '#FFD700', '#A52A2A', '#8B0000', '#FFFFFF', '#33FF33'],
+    },
+    "Emerald Tablet": {
+        '--bg-primary': '#0D331A', '--bg-secondary': '#175E2E', '--grid-bg': '#228B46', '--border-color': '#98FB98', '--primary': '#98FB98', '--accent': '#FFB6C1', '--text-color': '#E0FFE0', '--bacteria-color': '#111111',
+        'gem-colors': ['#98FB98', '#3CB371', '#20B2AA', '#F08080', '#FFFFFF', '#FFB6C1'],
+    },
+    "Pink Lemonade": {
+        '--bg-primary': '#20202C', '--bg-secondary': '#303045', '--grid-bg': '#404060', '--border-color': '#FF69B4', '--primary': '#FF69B4', '--accent': '#FFFF00', '--text-color': '#F5F5F5', '--bacteria-color': '#111111',
+        'gem-colors': ['#FF69B4', '#FFFF00', '#FF1493', '#00CFFF', '#ADFF2F', '#F5F5F5'],
+    },
+    "Space Dust": {
+        '--bg-primary': '#202030', '--bg-secondary': '#303045', '--grid-bg': '#404060', '--border-color': '#D8BFD8', '--primary': '#D8BFD8', '--accent': '#ADD8E6', '--text-color': '#F0F8FF', '--bacteria-color': '#111111',
+        'gem-colors': ['#D8BFD8', '#ADD8E6', '#9370DB', '#4682B4', '#FFFFFF', '#FFD700'],
+    },
+    "Terra Cotta": {
+        '--bg-primary': '#4B0000', '--bg-secondary': '#7C1A1A', '--grid-bg': '#9C3333', '--border-color': '#FFDAB9', '--primary': '#FFDAB9', '--accent': '#FFA07A', '--text-color': '#FFDAB9', '--bacteria-color': '#111111',
+        'gem-colors': ['#B06500', '#CD853F', '#F4A460', '#A52A2A', '#FFDAB9', '#FFA07A'],
+    },
+    "Grape Galaxy": {
+        '--bg-primary': '#191970', '--bg-secondary': '#383896', '--grid-bg': '#5C5CBE', '--border-color': '#DDA0DD', '--primary': '#DDA0DD', '--accent': '#FFD700', '--text-color': '#F0F8FF', '--bacteria-color': '#111111',
+        'gem-colors': ['#DDA0DD', '#BA55D3', '#9400D3', '#483D8B', '#FFFFFF', '#FFD700'],
+    },
+    "Dark Chocolate": {
+        '--bg-primary': '#2D1600', '--bg-secondary': '#4A2C00', '--grid-bg': '#694314', '--border-color': '#FFCC66', '--primary': '#FFCC66', '--accent': '#964B00', '--text-color': '#F0EAD6', '--bacteria-color': '#111111',
+        'gem-colors': ['#8B4513', '#D2B48C', '#F0EAD6', '#964B00', '#FFFFFF', '#FFCC66'],
+    },
+    "Azure": {
+        '--bg-primary': '#001A33', '--bg-secondary': '#003366', '--grid-bg': '#004C99', '--border-color': '#87CEFA', '--primary': '#87CEFA', '--accent': '#FFD700', '--text-color': '#F0F8FF', '--bacteria-color': '#111111',
+        'gem-colors': ['#87CEFA', '#4682B4', '#00BFFF', '#ADD8E6', '#FFFFFF', '#FFD700'],
+    },
+    "Magma Flow": {
+        '--bg-primary': '#300000', '--bg-secondary': '#500000', '--grid-bg': '#700000', '--border-color': '#FF4500', '--primary': '#FF4500', '--accent': '#FFD700', '--text-color': '#FFF5EE', '--bacteria-color': '#111111',
+        'gem-colors': ['#FF4500', '#FFD700', '#B22222', '#CD853F', '#FFFFFF', '#00FF7F'],
+    },
+};
+
+function applyTheme(themeName) {
+    const root = document.documentElement;
+    const theme = THEMES[themeName];
+    if (!theme) return;
+    
+    // Set CSS variables
+    for (const [key, value] of Object.entries(theme)) {
+        if (key.startsWith('--')) {
+            root.style.setProperty(key, value);
+        }
+    }
+    
+    document.body.setAttribute('data-theme', themeName); 
+    
+    const currentThemeNameEl = document.getElementById('currentThemeName');
+    if (currentThemeNameEl) {
+        currentThemeNameEl.innerText = themeName;
+    }
+    
+    // Update selection highlight in the theme menu
+    document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('selected'));
+    const selectedOption = document.querySelector(`.theme-option[title="${themeName}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // Set individual gem color CSS variables for drawing
+    if (theme['gem-colors']) {
+         theme['gem-colors'].forEach((color, index) => {
+            root.style.setProperty(`--gem-color-${index}`, color.trim());
+        });
+        if (window.game) {
+            window.game.setGemColors(theme['gem-colors']);
+            window.game.draw(); 
+        }
+    }
+    localStorage.setItem('gameTheme', themeName);
+}
+
+window.addEventListener('load', () => {
+    const savedTheme = localStorage.getItem('gameTheme') || "Midnight Sky";
+    applyTheme(savedTheme);
+});
+
+class Gem {
+    constructor(colorIndex, power = TYPE_NORMAL) {
+        this.color = colorIndex;
+        this.power = power; 
+        this.isDestroying = false;
+        this.destroyStart = 0;
+        this.isFlashing = false;
+        this.r = 0; // Row position
+        this.c = 0; // Column position
+        // NEW: for bacteria animation
+        this.isTransforming = false;
+        this.transformStart = 0;
+    }
+}
+
+class Particle { 
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 15;
+        this.vy = (Math.random() - 0.5) * 15;
+        this.life = 1.0;
+        this.color = color;
+        this.size = Math.random() * 8 + 3;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.5;
+        this.life -= 0.05;
+        this.size *= 0.95;
+    }
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+class SoundEngine { 
+    constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.enabled = true;
+        this.loadState();
+    }
+    
+    loadState() {
+        const savedState = localStorage.getItem('soundEnabled');
+        if (savedState !== null) {
+            this.enabled = savedState === 'true';
+        }
+        this.updateButton();
+    }
+    
+    toggle() {
+        this.enabled = !this.enabled;
+        localStorage.setItem('soundEnabled', this.enabled);
+        this.updateButton();
+    }
+    
+    updateButton() {
+        const btn = document.getElementById('soundToggleBtn');
+        if (!btn) return;
+        btn.classList.remove('sound-on', 'sound-off');
+        if (this.enabled) {
+            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            btn.classList.add('sound-on');
+        } else {
+            btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            btn.classList.add('sound-off');
+        }
+    }
+
+    playTone(freq, type, duration, vol = 0.1, delay = 0) {
+        if (!this.enabled || this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(e => console.log(e));
+        }
+        if(this.ctx.state === 'suspended' || !this.enabled) return;
+
+        const time = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, time);
+        gain.gain.setValueAtTime(vol, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(time);
+        osc.stop(time + duration);
+    }
+
+    match(count) {
+        const baseFreq = 1000;
+        const vol = Math.min(0.2, 0.05 + count * 0.015);
+        this.playTone(baseFreq + count * 100, 'sine', 0.05, vol); 
+        this.playTone(baseFreq * 0.5, 'square', 0.1, vol * 0.5, 0.02);
+    }
+    
+    powerBomb() {
+        this.playTone(400, 'square', 0.15, 0.6); 
+        this.playTone(800, 'sine', 0.3, 0.4, 0.05);
+        this.playTone(1800, 'sine', 0.4, 0.3, 0.1);
+        this.playTone(50, 'sawtooth', 0.5, 0.3); 
+    }
+
+    swap() { 
+        this.playTone(300, 'sine', 0.05, 0.05);
+    }
+
+    invalid() {
+        this.playTone(150, 'sawtooth', 0.2, 0.05);
+    }
+
+    bacteriaPop() {
+        this.playTone(1500, 'sine', 0.05, 0.3);
+        this.playTone(750, 'square', 0.1, 0.2, 0.01);
+    }
+    
+    bacteriaSpread() { // NEW: Sound for gem converting to bacteria
+        this.playTone(200, 'sawtooth', 0.2, 0.2);
+        this.playTone(100, 'square', 0.3, 0.1, 0.1);
+    }
+    
+    shuffle() {
+        this.playTone(500, 'triangle', 0.2, 0.1);
+        this.playTone(300, 'triangle', 0.2, 0.1, 0.05);
+    }
+    
+    levelClear() {
+        this.playTone(500, 'sine', 0.1, 0.5);
+        this.playTone(1000, 'sine', 0.2, 0.4, 0.05);
+        this.playTone(1500, 'sine', 0.3, 0.3, 0.15);
+    }
+}
+
+
+class Game {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.sound = new SoundEngine();
+        
+        this.grid = []; 
+        this.currentChain = []; 
+        this.chainColor = -1;
+        this.moves = 0;
+        this.level = 0;
+        this.particles = [];
+        this.animating = false;
+        this.isPaused = false;
+        this.dropMap = this.createEmptyDropMap(); 
+        this.levelTransition = null; 
+        this.requiredMatchLength = REQUIRED_MATCH_LENGTH;
+        this.lastFrameTime = performance.now();
+        this.isShuffling = false;
+        this.showInstructions = true;
+        this.instructionHint = []; 
+        this.activePowerGem = null; // NEW: To hold the power gem coordinates for continuous highlight
+
+        this.GEM_COLORS = this.getThemeGemColors(); 
+
+        // Initial setup calls
+        this.resize(); 
+        this.populateThemes();
+        
+        window.addEventListener('resize', () => this.resize());
+        this.setupInputHandlers();
+        
+        this.gameLoopRef = this.loop.bind(this);
+        requestAnimationFrame(this.gameLoopRef);
+    }
+    
+    getThemeGemColors() { 
+        const colors = [];
+        for (let i = 0; i < 6; i++) {
+            const color = getComputedStyle(document.documentElement).getPropertyValue(`--gem-color-${i}`);
+            colors.push(color.trim());
+        }
+        return colors;
+    }
+
+    setGemColors(colors) {
+        this.GEM_COLORS = colors.map(c => c.trim()); 
+    }
+    
+    toggleSound() { 
+        this.sound.toggle();
+    }
+    
+    populateThemes() { 
+        const themeGrid = document.getElementById('themeGrid');
+        if (!themeGrid) return; 
+        themeGrid.innerHTML = '';
+        
+        const currentTheme = localStorage.getItem('gameTheme') || "Midnight Sky";
+
+        Object.keys(THEMES).forEach(themeName => {
+            const theme = THEMES[themeName];
+            const div = document.createElement('div');
+            div.className = 'theme-option';
+            div.title = themeName;
+            
+            // Use the primary and accent colors for a representative swatch background
+            div.style.background = `linear-gradient(45deg, ${theme['--primary']}, ${theme['--accent']})`;
+            
+            div.onclick = () => {
+                applyTheme(themeName);
+            };
+            themeGrid.appendChild(div);
+            
+            if (themeName === currentTheme) {
+                 div.classList.add('selected');
+                 this.setGemColors(theme['gem-colors']); 
+            }
+        });
+    }
+
+    loop(currentTime) {
+        requestAnimationFrame(this.gameLoopRef); 
+        this.lastFrameTime = currentTime;
+        
+        if (!this.isPaused && !this.animating) {
+            this.checkGameStatus();
+        }
+        
+        this.draw();
+    }
+    
+    // FIX: Resize logic to ensure HUD is positioned correctly
+    resize() {
+        const wrapper = document.getElementById('canvas-wrapper');
+        
+        const availableWidth = wrapper.clientWidth; 
+        const availableHeight = wrapper.clientHeight;
+        
+        const minSize = Math.min(availableWidth, availableHeight);
+
+        const canvasSize = minSize * 0.98; 
+        
+        this.canvas.width = canvasSize;
+        this.canvas.height = canvasSize;
+        this.cellSize = canvasSize / COLS;
+
+        // **CRITICAL UI ALIGNMENT FIX:**
+        const gameContainer = document.getElementById('game-container');
+        const hud = document.getElementById('hud');
+        if (hud && gameContainer) {
+            // Calculate the centering offset for the canvas within the container's max width
+            const containerWidth = gameContainer.clientWidth; 
+            const canvasOffset = (containerWidth - this.canvas.width) / 2;
+            
+            // Apply a precise negative margin to the HUD to push it flush with the left edge of the centered canvas
+            // And use padding to limit the content to the canvas width
+            hud.style.paddingLeft = `${canvasOffset}px`;
+            hud.style.paddingRight = `${canvasOffset}px`;
+            hud.style.width = '100%'; // Ensure it fills the container width
+            hud.style.boxSizing = 'border-box'; 
+        }
+    }
+    
+    setupInputHandlers() {
+        const startEvents = ['mousedown', 'touchstart'];
+        const moveEvents = ['mousemove', 'touchmove'];
+        const endEvents = ['mouseup', 'touchend', 'contextmenu']; 
+
+        startEvents.forEach(e => this.canvas.addEventListener(e, (evt) => {
+            if (e.includes('touch')) evt.preventDefault(); 
+            this.handleSwipeStart(evt.touches ? evt.touches[0] : evt);
+        }, {passive: false}));
+
+        moveEvents.forEach(e => this.canvas.addEventListener(e, (evt) => {
+            this.handleSwipeMove(evt.touches ? evt.touches[0] : evt);
+        }, {passive: true}));
+
+        endEvents.forEach(e => this.canvas.addEventListener(e, (evt) => {
+            if (e === 'contextmenu') evt.preventDefault(); 
+            this.handleSwipeEnd(evt.changedTouches ? evt.changedTouches[0] : evt);
+        }));
+    }
+
+    // --- MENU AND STATE MANAGEMENT ---
+
+    async start() {
+        this.level = 1;
+        this.isPaused = false;
+        this.showInstructions = true;
+        document.getElementById('mainMenu').classList.add('hidden');
+        document.getElementById('hud').classList.remove('hidden'); 
+        document.getElementById('instructionalOverlay').classList.remove('hidden');
+        
+        this.resize(); 
+        
+        this.initLevel(); 
+    }
+    
+    restartLevel() {
+        if (this.level > 0) {
+            this.isPaused = false;
+            document.getElementById('pauseMenu').classList.add('hidden');
+            this.initLevel(); 
+        }
+    }
+
+    togglePause() { 
+        if (this.level === 0 || this.isShuffling) return;
+        this.isPaused = !this.isPaused;
+        if (this.isPaused) {
+            document.getElementById('pauseMenu').classList.remove('hidden');
+        } else {
+            document.getElementById('pauseMenu').classList.add('hidden');
+        }
+    }
+    
+    resume() { 
+        this.isPaused = false;
+        document.getElementById('pauseMenu').classList.add('hidden');
+    }
+
+    resetToMenu() { 
+        this.level = 0;
+        this.isPaused = false;
+        this.currentChain = [];
+        this.chainColor = -1;
+        this.activePowerGem = null; // Clear on reset
+        document.getElementById('mainMenu').classList.remove('hidden');
+        document.getElementById('pauseMenu').classList.add('hidden');
+        document.getElementById('gameOverMenu').classList.add('hidden');
+        document.getElementById('hud').classList.add('hidden');
+        this.grid = []; 
+        this.draw(); 
+    }
+    
+    showThemes() { 
+        document.getElementById('mainMenu').classList.add('hidden');
+        document.getElementById('themeMenu').classList.remove('hidden');
+    }
+
+    hideThemes() { 
+        document.getElementById('themeMenu').classList.add('hidden');
+        document.getElementById('mainMenu').classList.remove('hidden');
+    }
+    
+    showInfo() { 
+        document.getElementById('mainMenu').classList.add('hidden');
+        document.getElementById('infoMenu').classList.remove('hidden');
+    }
+    
+    hideInfo() { 
+        document.getElementById('infoMenu').classList.add('hidden');
+        document.getElementById('mainMenu').classList.remove('hidden');
+    }
+    
+    showLeaderboard() { 
+        document.getElementById('mainMenu').classList.add('hidden');
+        document.getElementById('leaderboardMenu').classList.remove('hidden');
+    }
+    
+    hideLeaderboard() { 
+        document.getElementById('leaderboardMenu').classList.add('hidden');
+        document.getElementById('mainMenu').classList.remove('hidden');
+    }
+
+    initLevel() { 
+        this.sound.ctx.resume(); 
+        
+        const currentLevelData = LEVEL_DATA[Math.min(this.level, LEVEL_DATA.length - 1)];
+        this.moves = currentLevelData.moves;
+        this.requiredMatchLength = currentLevelData.requiredMatch;
+        
+        document.getElementById('leaderboardMenu').classList.add('hidden');
+        document.getElementById('gameOverMenu').classList.add('hidden');
+        
+        this.initGrid(currentLevelData.bacteria);
+        
+        // Find a valid instructional hint (3-match straight line)
+        this.instructionHint = this.findInstructionalMatch();
+
+        if (!this.hasPossibleMoves()) {
+             this.shuffleBoard(true); 
+        }
+        this.updateHUD();
+    }
+    
+    randomColorIndex() { 
+        return Math.floor(Math.random() * (this.GEM_COLORS.length)); 
+    }
+    
+    initGrid(bacteriaCount) { 
+        this.grid = [];
+        for (let r = 0; r < ROWS; r++) {
+            let row = [];
+            for (let c = 0; c < COLS; c++) {
+                const gem = new Gem(this.randomColorIndex());
+                gem.r = r; gem.c = c;
+                row.push(gem);
+            }
+            this.grid.push(row);
+        }
+        
+        // Check for *initial* 3-in-a-row and change color if found
+        let initialMatch;
+        do {
+            initialMatch = this.findPostDropMatches(3); 
+            initialMatch.forEach(({r, c}) => {
+                let newColor = this.randomColorIndex();
+                while(newColor === this.grid[r][c].color) {
+                    newColor = this.randomColorIndex();
+                }
+                const newGem = new Gem(newColor);
+                newGem.r = r; newGem.c = c;
+                this.grid[r][c] = newGem;
+            });
+        } while (initialMatch.length > 0);
+        
+        // Place bacteria gems
+        let allSpots = [];
+        for(let r=0; r<ROWS; r++) {
+            for(let c=0; c<COLS; c++) {
+                allSpots.push({r, c});
+            }
+        }
+        
+        for (let i = 0; i < bacteriaCount && allSpots.length > 0; i++) {
+            const index = Math.floor(Math.random() * allSpots.length);
+            const {r, c} = allSpots.splice(index, 1)[0];
+            if (this.grid[r][c] && this.grid[r][c].color !== COLOR_BACTERIA) {
+                const bacteriaGem = new Gem(COLOR_BACTERIA);
+                bacteriaGem.r = r; bacteriaGem.c = c;
+                this.grid[r][c] = bacteriaGem;
+            }
+        }
+    }
+
+    getGem(r, c) { 
+        if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+            return this.grid[r][c];
+        }
+        return null;
+    }
+
+    getGemColor(r, c) { 
+        const gem = this.getGem(r, c); 
+        return (gem && gem.color !== COLOR_BACTERIA) ? gem.color : -1;
+    }
+    getCanvasCoords(e) { 
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+            r: Math.floor((e.clientY - rect.top) / this.cellSize),
+            c: Math.floor((e.clientX - rect.left) / this.cellSize)
+        };
+    }
+    
+    isAdjacent(r1, c1, r2, c2) { 
+        const dr = Math.abs(r1 - r2);
+        const dc = Math.abs(c1 - c2);
+        return dr <= 1 && dc <= 1 && (dr !== 0 || dc !== 0);
+    }
+    
+    isCellInChain(r, c) { 
+        return this.currentChain.some(cell => cell.r === r && cell.c === c);
+    }
+    createEmptyDropMap() { 
+        let map = [];
+        for(let r=0; r<ROWS; r++) {
+            map[r] = [];
+            for(let c=0; c<COLS; c++) {
+                map[r][c] = { fromR: r, toR: r, startTime: 0, active: false };
+            }
+        }
+        return map;
+    }
+    
+    // --- SWIPE CONNECT LOGIC ---
+    
+    handleSwipeStart(e) { 
+        // INSTANTLY HIDE INSTRUCTIONS
+        if (this.showInstructions) {
+            this.showInstructions = false;
+            document.getElementById('instructionalOverlay').classList.add('hidden');
+        }
+
+        if (this.animating || this.level === 0 || this.isPaused || this.isShuffling) return;
+
+        const coords = this.getCanvasCoords(e);
+        const gem = this.getGem(coords.r, coords.c);
+        this.activePowerGem = null;
+        
+        // Prevent starting chain on transforming gems
+        if (gem && gem.color !== COLOR_BACTERIA && !gem.isDestroying && !gem.isTransforming) {
+            this.currentChain = [coords];
+            this.chainColor = gem.color;
+            this.sound.swap(); 
+            
+            if (gem.power !== TYPE_NORMAL) {
+                 this.activePowerGem = { r: coords.r, c: coords.c, type: gem.power, color: gem.color };
+            }
+        }
+    }
+    
+    handleSwipeMove(e) { 
+        if (this.currentChain.length === 0 || this.animating || this.isPaused || this.isShuffling) return;
+
+        const coords = this.getCanvasCoords(e);
+        const gem = this.getGem(coords.r, coords.c);
+        
+        if (coords.r < 0 || coords.r >= ROWS || coords.c < 0 || coords.c >= COLS) return;
+
+        const lastCell = this.currentChain[this.currentChain.length - 1];
+        
+        // Check gem properties before adding to chain
+        if (gem && gem.color === this.chainColor && !gem.isTransforming && !gem.isDestroying && this.isAdjacent(lastCell.r, lastCell.c, coords.r, coords.c)) {
+            
+            if (!this.isCellInChain(coords.r, coords.c)) {
+                // ADD to chain
+                this.currentChain.push(coords);
+                this.sound.swap();
+                
+                // NEW: Update active power gem if this new gem is a power gem
+                if (gem.power !== TYPE_NORMAL) {
+                    this.activePowerGem = { r: coords.r, c: coords.c, type: gem.power, color: gem.color };
+                }
+                
+            } else if (this.currentChain.length > 1) {
+                // BACKTRACK: Only allow if moving back to the second to last cell
+                const secondToLast = this.currentChain[this.currentChain.length - 2];
+                if (coords.r === secondToLast.r && coords.c === secondToLast.c) {
+                    this.currentChain.pop();
+                    this.sound.invalid(); 
+                    
+                    // NEW: Check if the removed gem was the active power gem
+                    if (this.activePowerGem && this.activePowerGem.r === lastCell.r && this.activePowerGem.c === lastCell.c) {
+                        // Find the new active power gem (either the last one in the new chain or null)
+                        const newLast = this.currentChain[this.currentChain.length - 1];
+                        const newGem = this.getGem(newLast.r, newLast.c);
+                        if (newGem && newGem.power !== TYPE_NORMAL) {
+                             this.activePowerGem = { r: newGem.r, c: newGem.c, type: newGem.power, color: newGem.color };
+                        } else {
+                            this.activePowerGem = null;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // FIX: Combo now pops instantly by setting animating=true immediately
+    async handleSwipeEnd(e) { 
+        const chainToProcess = this.currentChain;
+        this.currentChain = []; 
+        this.chainColor = -1;
+        this.activePowerGem = null; // Clear on end of swipe
+
+        if (chainToProcess.length >= this.requiredMatchLength) {
+            
+            // CRITICAL FIX: Lock the game instantly
+            this.animating = true;
+            this.moves--;
+            this.sound.match(chainToProcess.length);
+            
+            let powerLocation = null;
+            let existingPowerGem = chainToProcess.find(cell => {
+                const gem = this.getGem(cell.r, cell.c);
+                return gem && (gem.power === TYPE_LINE_BREAKER_H || gem.power === TYPE_LINE_BREAKER_V);
+            });
+
+            if (existingPowerGem) {
+                powerLocation = existingPowerGem;
+            } else if (chainToProcess.length >= 5) { 
+                 const lastGemCoords = chainToProcess[chainToProcess.length - 1]; 
+                 powerLocation = {
+                     r: lastGemCoords.r,
+                     c: lastGemCoords.c,
+                     type: TYPE_LINE_BREAKER_V 
+                 };
+            } else if (chainToProcess.length === 4) {
+                 const lastGemCoords = chainToProcess[chainToProcess.length - 1]; 
+                 powerLocation = {
+                     r: lastGemCoords.r,
+                     c: lastGemCoords.c,
+                     type: TYPE_LINE_BREAKER_H 
+                 };
+            }
+            
+            const initialBacteriaCount = this.getBacteriaCount();
+
+            await this.processChain(chainToProcess, powerLocation);
+            
+            // Place the chain-created power gem
+            if (powerLocation && powerLocation.type) { 
+                const { r, c, type } = powerLocation;
+                // Check if the cell is now empty (it should be after dropAndRefill)
+                if (this.grid[r][c] === null) { 
+                     const newColor = this.chainColor; 
+                     const newGem = new Gem(newColor, type);
+                     newGem.r = r; newGem.c = c;
+                     this.grid[r][c] = newGem;
+                }
+            }
+            
+            // NEW: Bacteria Rise is now an async, animated operation
+            if (this.getBacteriaCount() === initialBacteriaCount) {
+                 await this.checkForBacteriaRise(); 
+            }
+
+            this.checkGameStatus();
+            this.animating = false; // Release lock only after destruction/drop/refill
+            
+        } else if (chainToProcess.length > 0) {
+            this.sound.invalid();
+        }
+        
+        this.updateHUD();
+    }
+    
+    async processChain(chain, powerLocation = null) { 
+        let cellsToClear = chain.map(c => ({...c}));
+        
+        this.destroyAdjacentBacteria(chain, cellsToClear);
+
+        this.triggerPowerGems(chain, cellsToClear);
+
+        // Final list of cells to clear (unique)
+        cellsToClear = cellsToClear.filter((v,i,a)=>a.findIndex(t=>(t.r === v.r && t.c === v.c))===i);
+
+        // Mark gems for destruction and create particles
+        cellsToClear.forEach(m => {
+            const gem = this.getGem(m.r, m.c);
+            if (gem && !gem.isDestroying) { 
+                gem.isDestroying = true;
+                gem.destroyStart = performance.now();
+                
+                const cx = m.c * this.cellSize + this.cellSize/2;
+                const cy = m.r * this.cellSize + this.cellSize/2;
+                
+                const color = gem.color === COLOR_BACTERIA 
+                    ? getComputedStyle(document.documentElement).getPropertyValue('--bacteria-color').trim() 
+                    : this.GEM_COLORS[gem.color];
+                    
+                for(let i=0; i<8; i++) { 
+                    this.particles.push(new Particle(cx, cy, color));
+                }
+            }
+        });
+        
+        // Find if a power gem was triggered (for the visual effect)
+        const triggeredPowerGems = cellsToClear.some(m => {
+            const gem = this.getGem(m.r, m.c);
+            return gem && (gem.power === TYPE_LINE_BREAKER_H || gem.power === TYPE_LINE_BREAKER_V);
+        });
+        
+        if (triggeredPowerGems) {
+            cellsToClear.forEach(m => {
+                const gem = this.getGem(m.r, m.c);
+                if (gem) gem.isFlashing = true; 
+            });
+            this.sound.powerBomb();
+        }
+
+        if (cellsToClear.length === 0) {
+            return;
+        }
+
+        await new Promise(res => setTimeout(res, BLAST_DURATION));
+
+        // Clear the grid cells
+        cellsToClear.forEach(m => {
+            if (m.r >= 0 && m.r < ROWS && m.c >= 0 && m.c < COLS) {
+                this.grid[m.r][m.c] = null; 
+            }
+        });
+
+        await this.dropAndRefill();
+    }
+
+    async dropAndRefill() { 
+        this.dropMap = this.createEmptyDropMap(); 
+        let newGrid = []; 
+        for(let r=0; r<ROWS; r++) newGrid[r] = new Array(COLS).fill(null);
+        const dropStartTime = performance.now();
+        let dropsOccurred = false;
+
+        for (let c = 0; c < COLS; c++) {
+            let existingGems = [];
+            
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (this.grid[r][c] !== null) {
+                    existingGems.unshift({ gem: this.grid[r][c], originalR: r });
+                }
+            }
+            
+            const newGemsCount = ROWS - existingGems.length; 
+            
+            for (let i = 0; i < newGemsCount; i++) {
+                dropsOccurred = true;
+                const targetR = i;
+                
+                // FIX: Power Gem Natural Spawning (5% chance in the top row)
+                let powerType = TYPE_NORMAL;
+                if (Math.random() < 0.05) { 
+                     powerType = Math.random() < 0.5 ? TYPE_LINE_BREAKER_H : TYPE_LINE_BREAKER_V;
+                }
+                
+                const newGem = new Gem(this.randomColorIndex(), powerType);
+                newGem.r = targetR; newGem.c = c; // Set position in gem object
+                newGrid[targetR][c] = newGem;
+                
+                this.dropMap[targetR][c].fromR = targetR - newGemsCount; 
+                this.dropMap[targetR][c].toR = targetR;
+                this.dropMap[targetR][c].startTime = dropStartTime;
+                this.dropMap[targetR][c].active = true;
+            }
+
+            for (let i = 0; i < existingGems.length; i++) {
+                const targetR = newGemsCount + i; 
+                const { gem, originalR } = existingGems[i];
+                
+                gem.r = targetR; gem.c = c; // Update position in gem object
+                newGrid[targetR][c] = gem;
+                
+                if (targetR !== originalR) {
+                    dropsOccurred = true;
+                    this.dropMap[targetR][c].fromR = originalR;
+                    this.dropMap[targetR][c].toR = targetR;
+                    this.dropMap[targetR][c].startTime = dropStartTime;
+                    this.dropMap[targetR][c].active = true;
+                }
+            }
+        }
+        this.grid = newGrid;
+        
+        if (dropsOccurred) {
+            await new Promise(res => setTimeout(res, DROP_DURATION));
+        }
+        this.dropMap = this.createEmptyDropMap(); 
+    }
+    
+    findPostDropMatches(minLength = 3) { 
+        let allMatches = [];
+
+        // Horizontal
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS - (minLength - 1); c++) {
+                let type = this.getGemColor(r, c);
+                if (type !== -1) {
+                    let match = true;
+                    for (let k = 1; k < minLength; k++) {
+                        if (this.getGemColor(r, c + k) !== type) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        let length = minLength;
+                        while (c + length < COLS && this.getGemColor(r, c + length) === type) { length++; }
+                        for (let i = 0; i < length; i++) allMatches.push({r, c: c + i});
+                        c += length - 1; 
+                    }
+                }
+            }
+        }
+        // Vertical
+        for (let c = 0; c < COLS; c++) {
+            for (let r = 0; r < ROWS - (minLength - 1); r++) {
+                let type = this.getGemColor(r, c);
+                if (type !== -1) {
+                    let match = true;
+                    for (let k = 1; k < minLength; k++) {
+                        if (this.getGemColor(r + k, c) !== type) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        let length = minLength;
+                        while (r + length < ROWS && this.getGemColor(r + length, c) === type) { length++; }
+                        for (let i = 0; i < length; i++) allMatches.push({r: r + i, c});
+                        r += length - 1; 
+                    }
+                }
+            }
+        }
+        return allMatches.filter((v,i,a)=>a.findIndex(t=>(t.r === v.r && t.c === v.c))===i);
+    }
+    
+    // NEW: Finds a horizontal or vertical 3-match for the hint
+    findInstructionalMatch() {
+        const check = (dr, dc) => {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const gem1 = this.getGem(r, c);
+                    if (!gem1 || gem1.color === COLOR_BACTERIA) continue;
+
+                    for (let i = 1; i < this.requiredMatchLength; i++) {
+                        const r2 = r + dr * i;
+                        const c2 = c + dc * i;
+                        const gem2 = this.getGem(r2, c2);
+                        if (!gem2 || gem2.color !== gem1.color) break;
+
+                        if (i === this.requiredMatchLength - 1) {
+                            // Found a match: return the chain
+                            let chain = [];
+                            for (let j = 0; j <= i; j++) {
+                                chain.push({r: r + dr * j, c: c + dc * j});
+                            }
+                            return chain;
+                        }
+                    }
+                }
+            }
+            return null;
+        };
+
+        // Prioritize Horizontal, then Vertical
+        let hint = check(0, 1); // Horizontal
+        if (hint) return hint;
+        
+        hint = check(1, 0); // Vertical
+        if (hint) return hint;
+        
+        // Diagonal (optional)
+        hint = check(1, 1);
+        if (hint) return hint;
+        
+        hint = check(1, -1);
+        if (hint) return hint;
+
+        return [];
+    }
+
+    hasPossibleMoves() { 
+        const checkMatch = (grid, r, c, color) => {
+            if (color === -1) return false;
+
+            const checkLine = (dr, dc) => {
+                let count = 0;
+                // Check one direction
+                for (let i = 1; i <= 2; i++) {
+                    if (this.getGemColor(r + dr * i, c + dc * i) === color) count++;
+                    else break;
+                }
+                // Check the opposite direction
+                for (let i = 1; i <= 2; i++) {
+                    if (this.getGemColor(r - dr * i, c - dc * i) === color) count++;
+                    else break;
+                }
+                return count >= 2;
+            };
+
+            // Check Horizontal (dr=0, dc=1)
+            if (checkLine(0, 1)) return true;
+            // Check Vertical (dr=1, dc=0)
+            if (checkLine(1, 0)) return true;
+            
+            // Check Diagonals
+            if (checkLine(1, 1)) return true;
+            if (checkLine(1, -1)) return true;
+
+            return false;
+        };
+
+        const neighbors = [
+            {dr: 0, dc: 1}, // Right
+            {dr: 1, dc: 0}, // Down
+            {dr: 1, dc: 1}, // Down-Right (Diagonal)
+            {dr: 1, dc: -1} // Down-Left (Diagonal)
+        ]; 
+        
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const gem1 = this.getGem(r, c);
+                if (!gem1 || gem1.color === COLOR_BACTERIA) continue;
+
+                for (const {dr, dc} of neighbors) {
+                    const r2 = r + dr;
+                    const c2 = c + dc;
+                    const gem2 = this.getGem(r2, c2);
+
+                    if (gem2 && gem2.color !== COLOR_BACTERIA) {
+                        // SWAP
+                        [this.grid[r][c], this.grid[r2][c2]] = [this.grid[r2][c2], this.grid[r][c]];
+                        
+                        // Check if the swap creates a match at either of the two new positions
+                        const possible = checkMatch(this.grid, r, c, gem2.color) || checkMatch(this.grid, r2, c2, gem1.color);
+                        
+                        // SWAP BACK
+                        [this.grid[r][c], this.grid[r2][c2]] = [this.grid[r2][c2], this.grid[r][c]];
+                        if (possible) return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // NEW: Async bacteria rise with animation
+    async checkForBacteriaRise() {
+        this.animating = true;
+        const bacteriaCount = this.getBacteriaCount();
+        const currentLevelData = LEVEL_DATA[Math.min(this.level, LEVEL_DATA.length - 1)];
+        const goalBacteria = currentLevelData.bacteria;
+        
+        if (bacteriaCount < goalBacteria) {
+            
+            let nonBacteriaGems = [];
+            
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const gem = this.grid[r][c];
+                    if (gem && gem.color !== COLOR_BACTERIA && !gem.isDestroying && !gem.isTransforming) {
+                        nonBacteriaGems.push({r, c});
+                    }
+                }
+            }
+            
+            // 1. Convert an existing non-bacteria gem (Spread)
+            if (nonBacteriaGems.length > 0) {
+                const { r, c } = nonBacteriaGems[Math.floor(Math.random() * nonBacteriaGems.length)];
+                const gemToConvert = this.grid[r][c];
+                
+                if (gemToConvert) {
+                    this.sound.bacteriaSpread();
+                    
+                    // Start transformation animation
+                    gemToConvert.isTransforming = true;
+                    gemToConvert.transformStart = performance.now();
+                    
+                    await new Promise(res => setTimeout(res, BACTERIA_RISE_DURATION));
+                    
+                    // Finalize transformation
+                    const bacteriaGem = new Gem(COLOR_BACTERIA);
+                    bacteriaGem.r = r; bacteriaGem.c = c;
+                    this.grid[r][c] = bacteriaGem;
+                    
+                    this.updateHUD();
+                }
+            } 
+            
+            this.animating = false;
+        }
+    }
+
+
+    async nextLevel() { 
+        const clearedLevel = this.level;
+        this.level++;
+        
+        if (this.level >= LEVEL_DATA.length) {
+            const lastLevel = LEVEL_DATA[LEVEL_DATA.length - 1];
+            LEVEL_DATA.push({
+                moves: Math.max(10, lastLevel.moves - 1),
+                bacteria: lastLevel.bacteria + 3,
+                requiredMatch: lastLevel.requiredMatch
+            });
+        }
+        
+        await this.showLevelTransition(clearedLevel);
+        this.initLevel();
+    }
+
+    showLevelTransition(clearedLevel) { 
+        this.animating = true;
+        this.levelTransition = {
+            startTime: performance.now(),
+            duration: LEVEL_TRANSITION_DURATION,
+            text: `LEVEL ${clearedLevel} CLEARED!`,
+            flashStart: performance.now() 
+        };
+        this.sound.levelClear(); 
+        
+        return new Promise(resolve => {
+            setTimeout(() => {
+                this.levelTransition = null;
+                this.animating = false;
+                resolve();
+            }, LEVEL_TRANSITION_DURATION);
+        });
+    }
+
+    triggerPowerGems(matches, cellsToClear) { 
+        let powerCells = [];
+
+        matches.forEach(({r, c}) => {
+            const gem = this.getGem(r, c);
+            if (gem && (gem.power === TYPE_LINE_BREAKER_H || gem.power === TYPE_LINE_BREAKER_V)) {
+                
+                if (!cellsToClear.some(cell => cell.r === r && c === cell.c)) {
+                    cellsToClear.push({r, c});
+                }
+                powerCells.push({r, c, type: gem.power});
+            }
+        });
+        
+        powerCells.forEach(({r, c, type}) => {
+            for (let i = 0; i < (type === TYPE_LINE_BREAKER_H ? COLS : ROWS); i++) {
+                const nr = type === TYPE_LINE_BREAKER_H ? r : i;
+                const nc = type === TYPE_LINE_BREAKER_H ? i : c;
+                
+                const gemAtCell = this.getGem(nr, nc);
+                if (gemAtCell && !gemAtCell.isDestroying) { 
+                    cellsToClear.push({r: nr, c: nc});
+                }
+            }
+        });
+        
+        cellsToClear = cellsToClear.filter((v,i,a)=>a.findIndex(t=>(t.r === v.r && t.c === v.c))===i);
+
+        cellsToClear.forEach(({r, c}) => {
+            const gem = this.grid[r][c];
+            if (gem && !gem.isDestroying) { 
+                gem.isDestroying = true;
+                gem.destroyStart = performance.now();
+                
+                const cx = c * this.cellSize + this.cellSize/2;
+                const cy = r * this.cellSize + this.cellSize/2;
+                const color = gem.color === COLOR_BACTERIA 
+                    ? getComputedStyle(document.documentElement).getPropertyValue('--bacteria-color').trim() 
+                    : this.GEM_COLORS[gem.color];
+                    
+                for(let i=0; i<8; i++) { 
+                    this.particles.push(new Particle(cx, cy, color));
+                }
+            }
+        });
+    }
+
+    destroyAdjacentBacteria(chain, cellsToClear) { 
+        let destroyedCount = 0;
+        
+        chain.forEach(({r, c}) => {
+            for(let dr=-1; dr<=1; dr++) {
+                for(let dc=-1; dc<=1; dc++) {
+                    if (dr === 0 && dc === 0) continue; 
+                    
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    
+                    const gem = this.getGem(nr, nc); 
+                    if (gem && gem.color === COLOR_BACTERIA && !gem.isDestroying) {
+                        if (!cellsToClear.some(cell => cell.r === nr && cell.c === nc)) {
+                            cellsToClear.push({r: nr, c: nc});
+                            destroyedCount++;
+                            this.sound.bacteriaPop();
+                        }
+                    }
+                }
+            }
+        });
+        
+        return destroyedCount;
+    }
+    
+    getBacteriaCount() { 
+        let count = 0;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (this.grid[r][c] && this.grid[r][c].color === COLOR_BACTERIA) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    checkGameStatus() { 
+        if (this.animating) return;
+
+        const bacteriaCount = this.getBacteriaCount();
+        
+        if (bacteriaCount === 0) {
+            this.nextLevel();
+        } else if (this.moves <= 0) {
+            this.checkGameOver();
+        } else if (!this.hasPossibleMoves()) {
+            this.shuffleBoard();
+        }
+    }
+
+    checkGameOver() { 
+        document.getElementById('gameOverMenu').classList.remove('hidden');
+        document.getElementById('hud').classList.add('hidden');
+        document.getElementById('goLevel').innerText = `Level Reached: ${this.level}`;
+        this.level = 0; 
+    }
+
+    updateHUD() { 
+        document.getElementById('levelDisplay').innerText = this.level;
+        document.getElementById('movesDisplay').innerText = this.moves;
+        
+        const currentLevelData = LEVEL_DATA[Math.min(this.level, LEVEL_DATA.length - 1)];
+        document.getElementById('bacteriaDisplay').innerText = `${this.getBacteriaCount()}/${currentLevelData.bacteria}`;
+    }
+    
+    async shuffleBoard(quiet = false) { 
+        this.isShuffling = true;
+        if (!quiet) {
+            this.sound.shuffle();
+            document.getElementById('shuffleMessage').classList.remove('hidden');
+            await new Promise(res => setTimeout(res, 500)); 
+        }
+
+        let allGems = [];
+        let bacteriaLocations = [];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const gem = this.grid[r][c];
+                if (gem && gem.color !== COLOR_BACTERIA) {
+                    allGems.push(gem);
+                } else if (gem && gem.color === COLOR_BACTERIA) {
+                    bacteriaLocations.push({r, c});
+                }
+            }
+        }
+        
+        let solvable = false;
+        let attemptCount = 0;
+
+        while (!solvable && attemptCount < 100) {
+            attemptCount++;
+            
+            for (let i = allGems.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allGems[i], allGems[j]] = [allGems[j], allGems[i]];
+            }
+
+            let gemIndex = 0;
+            let tempGrid = [];
+            for(let r=0; r<ROWS; r++) tempGrid[r] = new Array(COLS).fill(null);
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (bacteriaLocations.some(loc => loc.r === r && loc.c === c)) {
+                        const bacteriaGem = new Gem(COLOR_BACTERIA);
+                        bacteriaGem.r = r; bacteriaGem.c = c;
+                        tempGrid[r][c] = bacteriaGem;
+                    } else if (gemIndex < allGems.length) {
+                        const gem = allGems[gemIndex];
+                        gem.r = r; gem.c = c;
+                        tempGrid[r][c] = gem;
+                        gemIndex++;
+                    }
+                }
+            }
+            
+            this.grid = tempGrid;
+            
+            if (this.findPostDropMatches(3).length === 0 && this.hasPossibleMoves()) {
+                solvable = true;
+            }
+        }
+        
+        if (!quiet) {
+             document.getElementById('shuffleMessage').classList.add('hidden');
+        }
+        
+        this.isShuffling = false;
+
+        if (!solvable) {
+            this.initLevel(); 
+        }
+    }
+
+    // --- DRAWING FUNCTIONS ---
+    
+    drawRoundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.arcTo(x + width, y, x + width, y + radius, radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+        ctx.lineTo(x + radius, y + height);
+        ctx.arcTo(x, y + height, x, y + height - radius, radius);
+        ctx.lineTo(x, y + radius);
+        ctx.arcTo(x, y, x + radius, y, radius);
+        ctx.closePath();
+    }
+
+    // FIX: Enhanced Gem Drawing with Professional Lighting
+    drawCleanGem(r, c, x, y, size, gem, alpha = 1.0, animOffsetR = 0, animOffsetC = 0, isConnected = false) { 
+        const ctx = this.ctx;
+        // Get the computed color (handles CSS variables correctly)
+        const color = getComputedStyle(document.documentElement).getPropertyValue(`--gem-color-${gem.color}`).trim();
+        const powerType = gem.power;
+        
+        const cx = x + this.cellSize/2 + (animOffsetC * this.cellSize);
+        const cy = y + this.cellSize/2 + (animOffsetR * this.cellSize);
+        const gemSize = this.cellSize * 0.8;
+        const gemX = cx - gemSize / 2;
+        const gemY = cy - gemSize / 2;
+        const radius = gemSize * 0.15; 
+        const innerRadius = radius * 0.8;
+
+        ctx.save();
+        ctx.globalAlpha = alpha; 
+        
+        // 1. Shadow/Outer Glow
+        ctx.shadowColor = color; 
+        ctx.shadowBlur = 10 * alpha; 
+
+        // 2. Main Gem Body (Faceted/Lit Look)
+        this.drawRoundedRect(ctx, gemX, gemY, gemSize, gemSize, radius);
+        ctx.clip(); // Clip everything outside the gem shape
+        ctx.shadowBlur = 0; // Disable shadow for internal drawing
+
+        // Background Gradient (Dark to Light for Depth)
+        const gradientBg = ctx.createLinearGradient(gemX, gemY, gemX + gemSize, gemY + gemSize);
+        gradientBg.addColorStop(0, color); 
+        gradientBg.addColorStop(0.5, color); 
+        // --- FIXED: Removed black shade, replaced with color ---
+        gradientBg.addColorStop(1, color); 
+        
+        ctx.fillStyle = gradientBg;
+        ctx.fillRect(gemX, gemY, gemSize, gemSize);
+
+        if (isConnected) {
+            // Active State: Bright internal glow
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; // Stronger white
+            ctx.shadowColor = '#FFFFFF';
+            ctx.shadowBlur = 20 * alpha;
+            const coreSize = gemSize * 0.5;
+            this.drawRoundedRect(ctx, cx - coreSize/2, cy - coreSize/2, coreSize, coreSize, innerRadius);
+            ctx.fill();
+        } else {
+             // Resting State: Subtle Internal Refraction
+             // Instead of a solid color, we use a very transparent white.
+             // This lightens the center of the gem, looking good on ALL colors.
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'; 
+            
+            // We use the gem's own color for the soft glow, not white
+            ctx.shadowColor = color; 
+            ctx.shadowBlur = 15 * alpha;
+            
+            const coreSize = gemSize * 0.45;
+            ctx.beginPath();
+            ctx.arc(cx, cy, coreSize * 0.5, 0, Math.PI * 2); 
+            ctx.fill();
+        }
+        
+        ctx.shadowBlur = 0;
+
+        // 3. Specular Highlight (The 'sparkle' effect)
+        // Made slightly sharper for a glassier look
+        ctx.globalAlpha = 0.7 * alpha;
+        const gradientShine = ctx.createLinearGradient(gemX, gemY, gemX + gemSize*0.5, gemY + gemSize*0.5);
+        gradientShine.addColorStop(0, 'rgba(255,255,255,0.8)');
+        gradientShine.addColorStop(1, 'rgba(255,255,255,0)');
+        
+        ctx.fillStyle = gradientShine;
+        ctx.beginPath();
+        ctx.arc(gemX + gemSize * 0.25, gemY + gemSize * 0.25, gemSize * 0.12, 0, Math.PI * 2); 
+        ctx.fill();
+        
+        ctx.globalAlpha = alpha; // Reset alpha
+
+        // 4. Power Gem Indicator (ENHANCED VISIBILITY)
+        if (powerType !== TYPE_NORMAL) {
+            const indicatorSize = gemSize * 0.35; 
+            
+            ctx.shadowColor = '#000000'; 
+            ctx.shadowBlur = 5 * alpha;
+            
+            ctx.strokeStyle = '#FFFFFF'; 
+            ctx.fillStyle = '#FFFFFF';
+            
+            ctx.lineWidth = 5; 
+            ctx.lineCap = 'round';
+            
+            if (powerType === TYPE_LINE_BREAKER_H) {
+                // Horizontal Arrow
+                ctx.beginPath();
+                ctx.moveTo(cx - indicatorSize, cy);
+                ctx.lineTo(cx + indicatorSize, cy);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(cx + indicatorSize, cy); 
+                ctx.lineTo(cx + indicatorSize * 0.7, cy + 8); 
+                ctx.lineTo(cx + indicatorSize * 0.7, cy - 8); 
+                ctx.closePath(); 
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(cx - indicatorSize, cy); 
+                ctx.lineTo(cx - indicatorSize * 0.7, cy + 8); 
+                ctx.lineTo(cx - indicatorSize * 0.7, cy - 8); 
+                ctx.closePath(); 
+                ctx.fill();
+
+            } else if (powerType === TYPE_LINE_BREAKER_V) {
+                // Vertical Arrow
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - indicatorSize);
+                ctx.lineTo(cx, cy + indicatorSize);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + indicatorSize); 
+                ctx.lineTo(cx + 8, cy + indicatorSize * 0.7); 
+                ctx.lineTo(cx - 8, cy + indicatorSize * 0.7); 
+                ctx.closePath(); 
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - indicatorSize); 
+                ctx.lineTo(cx + 8, cy - indicatorSize * 0.7); 
+                ctx.lineTo(cx - 8, cy - indicatorSize * 0.7); 
+                ctx.closePath(); 
+                ctx.fill();
+            }
+
+            ctx.shadowBlur = 0;
+        }
+
+        ctx.restore(); 
+    }
+    
+    // FIX: Power Gem Highlight now uses the persistent activePowerGem
+    drawPowerGemHighlight(powerGemData) { 
+        if (!powerGemData) return;
+
+        const { r, c, type, color } = powerGemData;
+        
+        const lineStrokeColor = getComputedStyle(document.documentElement).getPropertyValue(`--gem-color-${color}`);
+        
+        this.ctx.save();
+        this.ctx.lineWidth = this.cellSize * 0.15; 
+        this.ctx.strokeStyle = lineStrokeColor;
+        
+        const blink = (Math.sin(performance.now() / 150) + 1) / 2;
+        this.ctx.globalAlpha = 0.5 + blink * 0.5; 
+
+        this.ctx.shadowColor = lineStrokeColor;
+        this.ctx.shadowBlur = 20; // Increased blur for visibility
+
+        this.ctx.beginPath();
+
+        if (type === TYPE_LINE_BREAKER_H) {
+            const cy = r * this.cellSize + this.cellSize/2;
+            this.ctx.moveTo(0, cy);
+            this.ctx.lineTo(this.canvas.width, cy);
+        } else if (type === TYPE_LINE_BREAKER_V) {
+            const cx = c * this.cellSize + this.cellSize/2;
+            this.ctx.moveTo(cx, 0);
+            this.ctx.lineTo(cx, this.canvas.height);
+        }
+        
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
+
+    drawConnectionLines() { 
+        if (this.currentChain.length < 2) return;
+
+        // Draw the Power Gem Highlight (Before the chain itself for layering)
+        if (this.activePowerGem) {
+            this.drawPowerGemHighlight(this.activePowerGem);
+        }
+
+        this.ctx.save();
+        this.ctx.lineWidth = this.cellSize * 0.12; 
+        
+        const lineStrokeColor = getComputedStyle(document.documentElement).getPropertyValue(`--gem-color-${this.chainColor}`);
+        
+        this.ctx.strokeStyle = lineStrokeColor;
+        this.ctx.lineCap = 'round';
+        this.ctx.shadowColor = lineStrokeColor;
+        this.ctx.shadowBlur = 15;
+        this.ctx.globalAlpha = 0.9;
+
+        this.ctx.beginPath();
+        
+        for (let i = 0; i < this.currentChain.length; i++) {
+            const {r, c} = this.currentChain[i];
+            const cx = c * this.cellSize + this.cellSize/2;
+            const cy = r * this.cellSize + this.cellSize/2;
+            
+            if (i === 0) {
+                this.ctx.moveTo(cx, cy);
+            } else {
+                this.ctx.lineTo(cx, cy);
+            }
+        }
+        
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
+    drawBacteria(r, c, x, y, size, gem, alpha = 1.0, animOffsetR = 0, animOffsetC = 0) { 
+        const ctx = this.ctx;
+        const color = getComputedStyle(document.documentElement).getPropertyValue('--bacteria-color').trim(); 
+        
+        const cx = x + this.cellSize/2 + (animOffsetC * this.cellSize);
+        const cy = y + this.cellSize/2 + (animOffsetR * this.cellSize);
+        
+        const isTransforming = gem.isTransforming;
+        let transformProgress = 0;
+        if (isTransforming) {
+             const elapsed = performance.now() - gem.transformStart;
+             transformProgress = Math.min(1, elapsed / BACTERIA_RISE_DURATION);
+        }
+
+        let radius = this.cellSize * 0.35; 
+        
+        ctx.save();
+        
+        if (isTransforming) {
+             // Progress from 1 (original size/color) to 0 (fully converted)
+             const bacteriaProgress = transformProgress; 
+             
+             // Pulsate effect: small bounce near end of transform
+             const pulsateFactor = 1.0 + Math.sin(bacteriaProgress * Math.PI) * 0.1;
+             
+             // Adjust radius based on transformation progress
+             radius *= pulsateFactor;
+             
+             // Draw the temporary, decaying gem color during transformation
+             if (bacteriaProgress < 1.0) {
+                  // The original gem color index is still in gem.color until the logic converts it
+                  this.drawDecayingGem(r, c, x, y, size, gem, 1.0 - bacteriaProgress, animOffsetR, animOffsetC);
+             }
+             
+             // Draw the growing bacteria overlay
+             ctx.globalAlpha = bacteriaProgress;
+             ctx.shadowColor = '#000000';
+             ctx.shadowBlur = 15 * bacteriaProgress;
+
+        } else {
+            // Normal pulsing bacteria
+            const pulsate = (Math.sin(performance.now() / 200) * 0.05 + 1.0) * radius;
+            radius = pulsate;
+            ctx.globalAlpha = alpha;
+            ctx.shadowColor = '#000000';
+            ctx.shadowBlur = 15;
+        }
+
+        const spikes = 12; 
+        
+        // Bacteria outline (pulsating spikes)
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.8)';
+        ctx.beginPath();
+        for(let i=0; i<spikes; i++) {
+            const angle = i * (Math.PI * 2 / spikes);
+            const outerRadius = radius * 1.2 + Math.random() * (radius * 0.2);
+            
+            ctx.lineTo(cx + outerRadius * Math.cos(angle), cy + outerRadius * Math.sin(angle));
+            
+            const angleMid = angle + (Math.PI / spikes);
+            const innerRadius = radius * 0.9 + Math.cos(angle * 3) * (radius * 0.1); 
+            ctx.lineTo(cx + innerRadius * Math.cos(angleMid), cy + innerRadius * Math.sin(angleMid));
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Bacteria core
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Dark center spot
+        ctx.fillStyle = 'rgba(100, 10, 10, 0.7)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+    
+    // NEW: Special drawing function for the gem that is being converted to bacteria
+    drawDecayingGem(r, c, x, y, size, gem, decayAlpha, animOffsetR = 0, animOffsetC = 0) {
+        const ctx = this.ctx;
+        const color = this.GEM_COLORS[gem.color];
+        
+        const cx = x + this.cellSize/2 + (animOffsetC * this.cellSize);
+        const cy = y + this.cellSize/2 + (animOffsetR * this.cellSize);
+        const gemSize = this.cellSize * 0.8;
+        const gemX = cx - gemSize / 2;
+        const gemY = cy - gemSize / 2;
+        const radius = gemSize * 0.15; 
+        
+        ctx.save();
+        
+        // Pulsating black outline/shadow during decay
+        const pulsate = (Math.sin(performance.now() / 50) + 1) / 2;
+        ctx.shadowColor = `rgba(0, 0, 0, ${decayAlpha * 0.9})`; 
+        ctx.shadowBlur = 20 * decayAlpha * pulsate;
+        
+        // Gem body fades out and darkens
+        ctx.globalAlpha = decayAlpha;
+        const gradientBg = ctx.createLinearGradient(gemX, gemY, gemX + gemSize, gemY + gemSize);
+        // Fade the colors towards a dark, brownish hue
+        const darkDecayColor = '#331100';
+        gradientBg.addColorStop(0, darkDecayColor); 
+        gradientBg.addColorStop(0.5, color + 'd0'); 
+        gradientBg.addColorStop(1, darkDecayColor); 
+        
+        this.drawRoundedRect(ctx, gemX, gemY, gemSize, gemSize, radius);
+        ctx.fillStyle = gradientBg;
+        ctx.fill();
+
+        ctx.restore();
+    }
+    
+    // NEW: Draws the instructional match hint
+    drawInstructionalHint(now) {
+        if (!this.showInstructions || this.instructionHint.length < this.requiredMatchLength) return;
+
+        const ctx = this.ctx;
+        const blink = (Math.sin(now / 150) * 0.5 + 0.5); 
+        const highlightColor = 'rgba(255, 255, 255, 0.8)';
+        
+        ctx.save();
+        ctx.lineWidth = this.cellSize * 0.12; 
+        ctx.strokeStyle = highlightColor;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = highlightColor;
+        ctx.shadowBlur = 10 * blink;
+        ctx.globalAlpha = 0.5 + blink * 0.5; 
+
+        // Draw connection line
+        ctx.beginPath();
+        this.instructionHint.forEach((cell, i) => {
+            const cx = cell.c * this.cellSize + this.cellSize/2;
+            const cy = cell.r * this.cellSize + this.cellSize/2;
+            if (i === 0) {
+                ctx.moveTo(cx, cy);
+            } else {
+                ctx.lineTo(cx, cy);
+            }
+        });
+        ctx.stroke();
+        
+        // Draw pulse effect around gems
+        this.instructionHint.forEach(cell => {
+            const cx = cell.c * this.cellSize + this.cellSize/2;
+            const cy = cell.r * this.cellSize + this.cellSize/2;
+            const radius = this.cellSize * 0.45;
+            
+            ctx.globalAlpha = 0.3 + blink * 0.3;
+            ctx.fillStyle = highlightColor;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * (1 + blink * 0.05), 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.restore();
+    }
+
+
+    draw() {
+        const now = performance.now();
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-bg').trim();
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (!this.grid || this.grid.length === 0 || !this.grid[0]) { 
+            if (this.levelTransition) this.drawTransitionEffect(now); 
+            return;
+        }
+        
+        this.drawConnectionLines();
+
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const gem = this.getGem(r, c);
+                
+                let x = c * this.cellSize;
+                let y = r * this.cellSize;
+                
+                let animOffsetR = 0;
+                let animOffsetC = 0;
+                let alpha = 1.0;
+                
+                // Draw Cell Grid Lines
+                this.ctx.strokeStyle = "rgba(255,255,255, 0.05)";
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(c * this.cellSize, r * this.cellSize, this.cellSize, this.cellSize);
+                
+                if (!gem) continue; 
+
+                const dropData = this.dropMap[r] ? this.dropMap[r][c] : null;
+                if (dropData && dropData.active) {
+                    const dropElapsed = now - dropData.startTime;
+                    const dropProgress = Math.min(1, dropElapsed / DROP_DURATION);
+                    
+                    if (dropProgress < 1) {
+                        const startR = dropData.fromR;
+                        const endR = dropData.toR; 
+
+                        const easeOutBounce = (t) => {
+                            const n1 = 7.5625; const d1 = 2.75;
+                            if (t < 1 / d1) return n1 * t * t;
+                            else if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+                            else if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+                            else return n1 * (t -= 2.625 / d1) * t + 0.984375;
+                        };
+                        
+                        const currentR = startR + (endR - startR) * easeOutBounce(dropProgress);
+                        animOffsetR = currentR - r; 
+                    } else {
+                        dropData.active = false;
+                    }
+                }
+                
+                if (gem.isDestroying) {
+                    const elapsed = now - gem.destroyStart;
+                    const progress = Math.min(1, elapsed / BLAST_DURATION);
+                    alpha = 1.0 - progress; 
+                    if (alpha <= 0.01) continue; 
+                }
+                
+                const isConnected = this.isCellInChain(r, c);
+
+                if (gem.color === COLOR_BACTERIA) {
+                    // Pass gem object to drawBacteria to handle transformation logic
+                    this.drawBacteria(r, c, x, y, this.cellSize, gem, alpha, animOffsetR, animOffsetC);
+                } else if (gem.isTransforming) {
+                     // The transformation logic is contained within drawBacteria
+                     this.drawBacteria(r, c, x, y, this.cellSize, gem, alpha, animOffsetR, animOffsetC);
+                } else {
+                    this.drawCleanGem(r, c, x, y, this.cellSize, gem, alpha, animOffsetR, animOffsetC, isConnected);
+                }
+            }
+        }
+        
+        if (this.showInstructions) {
+            this.drawInstructionalHint(now);
+        }
+        
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            if (!this.isPaused) p.update();
+            p.draw(this.ctx);
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+        
+        if (this.levelTransition) {
+            this.drawTransitionEffect(now); 
+        }
+    }
+    
+    drawTransitionEffect(now) { 
+        const transition = this.levelTransition;
+        if (!transition) return;
+
+        const elapsed = now - transition.startTime;
+        const progress = Math.min(1, elapsed / transition.duration);
+        
+        const ctx = this.ctx;
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        const maxRadius = Math.max(this.canvas.width, this.canvas.height) * 0.7;
+        const textFadeStart = 0.5;
+        const textFadeDuration = 0.5; 
+
+        if (progress < 0.1) {
+            const flashAlpha = 1.0 - (progress / 0.1);
+            ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha * 0.5})`; 
+            ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        if (progress < 0.5) {
+            const rippleProgress = progress / 0.5;
+            const currentRadius = maxRadius * rippleProgress;
+            const rippleAlpha = 1.0 - rippleProgress;
+            
+            ctx.save();
+            ctx.globalAlpha = rippleAlpha;
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+            ctx.lineWidth = 10 * (1 - rippleProgress) + 1; 
+            ctx.shadowColor = 'var(--primary)';
+            ctx.shadowBlur = 20;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        
+        let scale = 1.0;
+        if (progress < textFadeStart) {
+            scale = 1 + progress * 2; 
+        } else {
+            scale = 2.0; 
+        }
+        ctx.scale(scale, scale);
+        
+        let alpha = 1.0;
+        if (progress < 0.1) {
+            alpha = progress * 10;
+        } else if (progress > (1.0 - textFadeDuration)) {
+            alpha = (1.0 - progress) / textFadeDuration;
+        }
+        
+        ctx.globalAlpha = alpha;
+        
+        const fontSize = this.canvas.width * 0.04;
+        ctx.font = `bolder ${fontSize}px ${getComputedStyle(document.documentElement).getPropertyValue('--font-display')}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        ctx.lineWidth = fontSize * 0.1; 
+        ctx.strokeStyle = '#FFFFFF'; 
+        ctx.strokeText(transition.text, 0, 0); 
+        
+        ctx.shadowColor = 'var(--accent)'; 
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = 'var(--primary)'; 
+        ctx.fillText(transition.text, 0, 0);
+
+        ctx.restore();
+    }
+}
+
+const game = new Game(); 
+</script>
+</body>
+</html>

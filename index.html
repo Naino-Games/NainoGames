@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naino Games</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+</head>
+<body>
+    
+    <nav class="navbar">
+        <a href="index.html" class="logo-link">
+            <div class="logo">NAINO GAMES</div>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#games">Library</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <header class="hero" id="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title" id="hero-game-name"></h1>
+            <p id="hero-game-desc"></p>
+            <div class="hero-buttons">
+                <a href="#" id="hero-main-link" class="btn-main">Play Game</a>
+                <a href="#" id="hero-mobile-link" class="btn-main mobile-btn">Play on Mobile</a>
+            </div>
+        </div>
+        <button id="hero-next-btn" class="hero-nav-btn">&#10095;</button>
+    </header>
+
+    <section class="games-section" id="games">
+        <div class="section-header">
+            <h2>Game Library</h2>
+        </div>
+        <div class="games-grid">
+            
+            <div class="game-card" 
+                 data-banner="images/flappynainbanner.png" 
+                 data-name="FLAPPY NAIN" 
+                 data-desc="A challenging one-tap arcade game optimized for precision control." 
+                 data-pc="game-wrapper.html?src=games/flappynain/pc/index.html" 
+                 data-mobile="game-wrapper.html?src=games/flappynain/mobile/index.html" 
+                 data-match="#ff60a6"
+                 data-mode="split">
+                <div class="card-thumb">
+                    <img src="images/flappynainbanner.png" alt="Flappy Nain Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/flappynainlogo.png" alt="Logo" class="game-logo">
+                        <h3>FLAPPY NAIN</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">PC</span><span class="tag">Mobile</span><span class="tag">Skill</span>
+                    </div>
+                    <p>A challenging one-tap arcade game optimized for precision control.</p>
+                    <div class="card-actions">
+                        <a href="game-wrapper.html?src=games/flappynain/pc/index.html" class="btn-sm full-width">Play PC</a>
+                        <a href="game-wrapper.html?src=games/flappynain/mobile/index.html" class="btn-sm mobile-hover full-width">Play Mobile</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card" 
+                 data-banner="images/snakelandbanner.png" 
+                 data-name="SNAKE LAND" 
+                 data-desc="Experience the timeless snake game with modern physics and difficulty." 
+                 data-pc="game-wrapper.html?src=games/snakeland/pc/index.html" 
+                 data-match="#ff6060"
+                 data-mode="pc-only">
+                <div class="card-thumb">
+                    <img src="images/snakelandbanner.png" alt="Snake Land Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/snakelandlogo.png" alt="Logo" class="game-logo">
+                        <h3>SNAKE LAND</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">PC Only</span><span class="tag">Classic</span>
+                    </div>
+                    <p>Experience the timeless snake game with modern physics and difficulty.</p>
+                    <div class="card-actions">
+                        <a href="game-wrapper.html?src=games/snakeland/pc/index.html" class="btn-sm full-width">Play PC</a>
+                    </div>
+                </div>
+            </div>
+
+             <div class="game-card" 
+                  data-banner="images/tictactoebanner.png" 
+                  data-name="TIC TAC TOE" 
+                  data-desc="The ultimate strategic puzzle game. Challenge a friend or the smart AI." 
+                  data-pc="game-wrapper.html?src=games/tictactoe/index.html" 
+                  data-match="#47d1ff"
+                  data-mode="unified">
+                <div class="card-thumb">
+                    <img src="images/tictactoebanner.png" alt="Tic Tac Toe Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/tictactoelogo.png" alt="Logo" class="game-logo">
+                        <h3>TIC TAC TOE</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Cross-Platform</span><span class="tag">Puzzle</span>
+                    </div>
+                    <p>The ultimate strategic puzzle game. Challenge a friend or the smart AI.</p>
+                    <div class="card-actions">
+                         <a href="game-wrapper.html?src=games/tictactoe/index.html" class="btn-sm full-width">Play Game</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card" 
+                 data-banner="images/crushconnectbanner.png" 
+                 data-name="CRUSH CONNECT" 
+                 data-desc="Link matching items in this addictive puzzle saga. Strategy is key." 
+                 data-pc="game-wrapper.html?src=games/crushconnect/index.html" 
+                 data-match="#ff60ff"
+                 data-mode="unified">
+                <div class="card-thumb">
+                    <img src="images/crushconnectbanner.png" alt="Crush Connect Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/crushconnectlogo.png" alt="Logo" class="game-logo">
+                        <h3>CRUSH CONNECT</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Cross-Platform</span><span class="tag">Puzzle</span>
+                    </div>
+                    <p>Link matching items in this addictive puzzle saga. Strategy is key.</p>
+                    <div class="card-actions">
+                         <a href="game-wrapper.html?src=games/crushconnect/index.html" class="btn-sm full-width">Play Game</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card" 
+                 data-banner="images/spendfathermoneybanner.png" 
+                 data-name="SPEND YOUR FATHER'S MONEY" 
+                 data-desc="Manage a massive inheritance: buy mansions, yachts, and exclusive assets in this tycoon simulator." 
+                 data-pc="game-wrapper.html?src=games/spendfathermoney/index.html" 
+                 data-match="#00cc66" 
+                 data-mode="unified">
+                <div class="card-thumb">
+                    <img src="images/spendfathermoneybanner.png" alt="Spend Your Father's Money Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/spendfathermoneylogo.png" alt="Logo" class="game-logo">
+                        <h3>SPEND YOUR FATHER'S MONEY</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Cross-Platform</span><span class="tag">Tycoon</span>
+                    </div>
+                    <p>Manage a massive inheritance: buy mansions, yachts, and exclusive assets in this tycoon simulator.</p>
+                    <div class="card-actions">
+                         <a href="game-wrapper.html?src=games/spendfathermoney/index.html" class="btn-sm full-width">Play Game</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card" 
+                 data-banner="images/splashconnectbanner.png" 
+                 data-name="SPLASH CONNECT" 
+                 data-desc="Connect the pipes and let the water flow in this refreshing logic puzzle." 
+                 data-pc="game-wrapper.html?src=games/splashconnect/index.html" 
+                 data-match="#00e5ff"
+                 data-mode="pc-only">
+                <div class="card-thumb">
+                    <img src="images/splashconnectbanner.png" alt="Splash Connect Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/splashconnectlogo.png" alt="Logo" class="game-logo">
+                        <h3>SPLASH CONNECT</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">PC Only</span><span class="tag">Logic</span>
+                    </div>
+                    <p>Connect the pipes and let the water flow in this refreshing logic puzzle.</p>
+                    <div class="card-actions">
+                         <a href="game-wrapper.html?src=games/splashconnect/index.html" class="btn-sm full-width">Play PC</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card" 
+                 data-banner="images/nainobubblebanner.png" 
+                 data-name="NAINO BUBBLE" 
+                 data-desc="Pop, aim, and blast your way through bubbles in this vibrant mobile arcade." 
+                 data-pc="game-wrapper.html?src=games/nainobubble/mobile/index.html" 
+                 data-match="#ffbd2e"
+                 data-mode="mobile-only">
+                <div class="card-thumb">
+                    <img src="images/nainobubblebanner.png" alt="Naino Bubble Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/nainobubblelogo.png" alt="Logo" class="game-logo">
+                        <h3>NAINO BUBBLE</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Android Only</span><span class="tag">Arcade</span>
+                    </div>
+                    <p>Pop, aim, and blast your way through bubbles in this vibrant mobile arcade.</p>
+                    <div class="card-actions">
+                        <a href="game-wrapper.html?src=games/nainobubble/mobile/index.html" class="btn-sm full-width">Play Mobile</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card" 
+                 data-banner="images/drawbattlebanner.png" 
+                 data-name="NAINO AI VS HUMAN DRAW BATTLE" 
+                 data-desc="Test your artistic skills against a neural network. Can the AI guess what you're drawing?" 
+                 data-pc="game-wrapper.html?src=games/drawbattle/index.html" 
+                 data-match="#4f5bd5"
+                 data-mode="unified">
+                <div class="card-thumb">
+                    <img src="images/drawbattlebanner.png" alt="Naino AI Draw Battle Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/drawbattlelogo.png" alt="Logo" class="game-logo">
+                        <h3>NAINO AI VS HUMAN DRAW BATTLE</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Cross-Platform</span><span class="tag">AI</span>
+                    </div>
+                    <p>Test your artistic skills against a neural network. Can the AI guess what you're drawing?</p>
+                    <div class="card-actions">
+                         <a href="game-wrapper.html?src=games/drawbattle/index.html" class="btn-sm full-width">Play Game</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card" 
+                 data-banner="images/nainodrivebanner.png" 
+                 data-name="NAINO DRIVE" 
+                 data-desc="Dash, jump, and slide through infinite obstacles in this high-speed endless runner." 
+                 data-pc="game-wrapper.html?src=games/nainodrive/index.html" 
+                 data-match="#ff9900"
+                 data-mode="unified">
+                <div class="card-thumb">
+                    <img src="images/nainodrivebanner.png" alt="Naino Drive Banner">
+                </div>
+                <div class="card-details">
+                    <div class="card-title-group">
+                        <img src="images/nainodrivelogo.png" alt="Logo" class="game-logo">
+                        <h3>NAINO DRIVE</h3>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Cross-Platform</span><span class="tag">Action</span>
+                    </div>
+                    <p>Dash, jump, and slide through infinite obstacles in this high-speed endless driving game.</p>
+                    <div class="card-actions">
+                         <a href="game-wrapper.html?src=games/nainodrive/index.html" class="btn-sm full-width">Play Game</a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <section class="info-section" id="about">
+        <div class="section-header">
+            <h2>About Naino Games</h2>
+        </div>
+        <div class="info-content">
+            <h3 class="subsection-title">Our Vision</h3>
+            <p>Naino Games is dedicated to crafting highly polished, accessible, and fun experiences across all platforms. We believe that premium gaming should not be restricted by device or cost. We focus on games with deep replayability, modern aesthetics, and fluid performance.</p>
+            
+            <h3 class="subsection-title">The Developer</h3>
+            <p>This entire platform and the games hosted here are the work of <strong>Nawab Husnain</strong>. A passion project focused on combining minimal, professional design with robust, high-quality development.</p>
+
+            <h3 class="subsection-title">Our YouTube Channels</h3>
+            <div class="channel-grid">
+                 <a href="https://youtube.com/@nainogame262?si=RQr9VA64RIZnLQBz" target="_blank" class="youtube-btn-main">Naino Games (Dev)</a>
+                 <a href="https://www.youtube.com/@BuntyZZ" target="_blank" class="youtube-btn-main" style="background: #2574A9;">BuntyZZ (Gaming)</a>
+            </div>
+
+            <h3 class="subsection-title">Technology</h3>
+            <p>Our games are built using modern web technologies (HTML5, JavaScript) ensuring compatibility and blazing-fast loading times. The website itself uses a custom, performance-optimized, dark-themed framework.</p>
+        </div>
+    </section>
+    
+    <section class="info-section" id="contact">
+        <div class="section-header">
+            <h2>Get In Touch</h2>
+        </div>
+        <div class="info-content">
+            <p>Whether you have feedback, bug reports, or partnership opportunities, we would love to hear from you.</p>
+            <h3 class="subsection-title">Business Inquiries</h3>
+            <a href="mailto:nainogame@gmail.com" class="contact-email">nainogame@gmail.com</a>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2025 Naino Games. All Rights Reserved.
+    </footer>
+
+    <script>
+        // --- DATA AND MATCHING COLOR LOGIC ---
+        const heroSection = document.getElementById('hero-section');
+        const heroTitle = document.getElementById('hero-game-name');
+        const heroDesc = document.getElementById('hero-game-desc');
+        const heroMainLink = document.getElementById('hero-main-link');
+        const heroMobileLink = document.getElementById('hero-mobile-link');
+        const heroNextBtn = document.getElementById('hero-next-btn'); 
+        const root = document.documentElement;
+
+        const allCards = Array.from(document.querySelectorAll('.game-card'));
+        let currentCardIndex = 0; 
+
+        // --- DEVICE DETECTION LOGIC ---
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // --- SMART SUGGESTION LOGIC ---
+        function getStartIndex() {
+            const isMobile = isMobileDevice();
+            
+            // Find the first game compatible with the current device
+            const index = allCards.findIndex(card => {
+                const mode = card.getAttribute('data-mode');
+                
+                if (isMobile) {
+                    // On Mobile: Allow 'split', 'unified', 'mobile-only'. Skip 'pc-only'.
+                    return mode !== 'pc-only';
+                } else {
+                    // On PC: Allow 'split', 'unified', 'pc-only'. Skip 'mobile-only'.
+                    return mode !== 'mobile-only';
+                }
+            });
+
+            // If no match found (unlikely), default to 0
+            return index !== -1 ? index : 0;
+        }
+
+        // Set the initial index based on device
+        currentCardIndex = getStartIndex();
+        
+        // Function to set Hero details based on the card data
+        function updateHero(card) {
+            const banner = card.getAttribute('data-banner');
+            const name = card.getAttribute('data-name');
+            const desc = card.getAttribute('data-desc');
+            const pcLink = card.getAttribute('data-pc');
+            const mobileLink = card.getAttribute('data-mobile');
+            const matchColor = card.getAttribute('data-match'); 
+            const mode = card.getAttribute('data-mode'); // split, pc-only, unified, or mobile-only
+
+            // 1. Initiate Transition
+            heroSection.style.backgroundImage = `url('${banner}')`;
+            heroSection.classList.add('hero-content-fade-out');
+
+            // 2. Update Content
+            setTimeout(() => {
+                root.style.setProperty('--hero-match-color', matchColor || '#d8baff');
+
+                heroTitle.textContent = name;
+                heroDesc.textContent = desc;
+
+                // Configure Buttons based on MODE
+                if (mode === 'unified') {
+                    // Unified Games
+                    heroMainLink.href = pcLink;
+                    heroMainLink.textContent = "Play Game";
+                    heroMobileLink.style.display = 'none';
+                } 
+                else if (mode === 'pc-only') {
+                    // PC Only Games
+                    heroMainLink.href = pcLink;
+                    heroMainLink.textContent = "Play PC Version";
+                    heroMobileLink.style.display = 'none';
+                } 
+                else if (mode === 'mobile-only') {
+                    // Mobile Only Games
+                    heroMainLink.href = pcLink; 
+                    heroMainLink.textContent = "Play Mobile Version";
+                    heroMobileLink.style.display = 'none';
+                }
+                else {
+                    // Split Games
+                    heroMainLink.href = pcLink;
+                    heroMainLink.textContent = "Play PC Version";
+                    heroMobileLink.style.display = 'inline-block';
+                    if (mobileLink) heroMobileLink.href = mobileLink;
+                }
+                
+                // 3. Remove fade-out
+                heroSection.classList.remove('hero-content-fade-out');
+            }, 300); 
+        }
+
+        // Function to move to the next game
+        function nextGame() {
+            currentCardIndex = (currentCardIndex + 1) % allCards.length;
+            updateHero(allCards[currentCardIndex]);
+        }
+        
+        heroNextBtn.addEventListener('click', () => {
+             playClickTone(); 
+             nextGame();
+        });
+
+        // Set initial Hero content based on smart suggestion
+        updateHero(allCards[currentCardIndex]);
+
+        allCards.forEach((card, index) => {
+            card.addEventListener('mouseenter', () => {
+                if (index !== currentCardIndex) {
+                    updateHero(card);
+                }
+            });
+            card.addEventListener('mouseleave', () => {
+                if (index !== currentCardIndex) {
+                    updateHero(allCards[currentCardIndex]); 
+                }
+            });
+            card.addEventListener('click', () => {
+                 currentCardIndex = index;
+            });
+        });
+
+        // --- AUDIO ENGINE ---
+        let AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        let hasInteracted = false; 
+        let hoverListenersAttached = false; 
+
+        const initAudioContext = () => {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+                hasInteracted = true;
+                attachHoverListeners(); 
+                document.removeEventListener('mousedown', initAudioContext, true);
+                document.removeEventListener('click', initAudioContext, true);
+            }
+        };
+        document.addEventListener('mousedown', initAudioContext, true);
+        document.addEventListener('click', initAudioContext, true);
+
+        const playClickTone = () => { 
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(440, now);
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.15, now + 0.005);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+            oscillator.start(now);
+            oscillator.stop(now + 0.08);
+        };
+        
+        const playHoverTone = () => { 
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            oscillator.type = 'sine'; 
+            oscillator.frequency.setValueAtTime(1200, now); 
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.05, now + 0.002); 
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.03); 
+            oscillator.start(now);
+            oscillator.stop(now + 0.03);
+        };
+
+        const attachHoverListeners = () => {
+            if (hoverListenersAttached) return;
+            const interactiveElements = document.querySelectorAll('.navbar a, .btn-main, .btn-sm, .logo-link, .youtube-btn-main, #hero-next-btn');
+            interactiveElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    if (hasInteracted) playHoverTone();
+                });
+            });
+            hoverListenersAttached = true;
+        }
+        document.body.addEventListener('mousedown', (event) => {
+            const target = event.target.closest('a, button, .logo-link, .youtube-btn-main, #hero-next-btn');
+            if (target && target.id !== 'hero-next-btn') playClickTone(); 
+        });
+    </script>
+</body>
+</html>

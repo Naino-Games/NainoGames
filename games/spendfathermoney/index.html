@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend The Money</title>
+    <style>
+        :root {
+            /* THEME: Royal Blue */
+            --primary: #007bff; 
+            --primary-dark: #0056b3;
+            --accent: #ffc107;
+            --danger: #dc3545;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+            --header-height: 100px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #e9ecef;
+            color: var(--dark);
+            padding-bottom: 120px;
+        }
+
+        /* --- MODAL / POPUP STYLES --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            transform: translateY(30px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+        
+        .modal-input:focus { border-color: var(--primary); }
+
+        /* --- RECEIPT STYLES --- */
+        .receipt-container {
+            background: #fffdf0; 
+            border: 2px dashed #d1d1d1;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: left;
+            color: #333;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .receipt-header {
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px dashed #bbb;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .receipt-divider {
+            border-bottom: 1px dashed #bbb;
+            margin: 10px 0;
+        }
+
+        .receipt-total-line {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        /* --- SETUP SCREEN --- */
+        #setup-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #007bff 0%, #00d2ff 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .setup-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        .setup-card h1 { margin-bottom: 10px; color: var(--dark); }
+        .setup-card p { color: #6c757d; margin-bottom: 30px; }
+
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
+        
+        select, input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: #f8f9fa;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 700;
+            transition: all 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+        .btn-primary:hover { 
+            background: var(--primary-dark); 
+            transform: translateY(-2px);
+        }
+
+        /* --- STICKY HEADER --- */
+        header {
+            background: white;
+            color: var(--dark);
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: var(--header-height);
+            transition: all 0.3s ease;
+        }
+
+        header.scrolled {
+            height: 70px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        /* --- MONEY COUNTER STYLES --- */
+        .balance-container { 
+            text-align: center;
+            background: var(--primary);
+            padding: 10px 40px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,123,255,0.4);
+            color: white;
+            min-width: 300px;
+            transition: all 0.3s ease;
+        }
+        
+        header.scrolled .balance-container {
+            padding: 5px 30px;
+            min-width: 200px;
+        }
+
+        .balance {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        header.scrolled .balance { font-size: 1.5rem; }
+        
+        .net-worth-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 2px;
+        }
+        
+        header.scrolled .net-worth-label { display: none; }
+
+        /* --- GRID --- */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .item-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .item-image-container {
+            width: 100%;
+            height: 180px;
+            background: #ffffff; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .item-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+        }
+
+        .item-details {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .item-name { 
+            font-weight: 800; 
+            font-size: 1.3rem; 
+            margin-bottom: 5px; 
+            color: var(--dark);
+        }
+        
+        .item-price { 
+            color: var(--primary); 
+            font-weight: 700; 
+            font-size: 1.1rem;
+            margin-bottom: 20px; 
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-top: auto;
+            align-items: center;
+        }
+
+        .btn-control {
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-sell { 
+            background-color: #e9ecef; 
+            color: #495057; 
+        }
+        .btn-sell:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .btn-buy { 
+            background-color: var(--primary); 
+            color: white; 
+        }
+        .btn-buy:disabled { 
+            background-color: #e9ecef; 
+            color: #adb5bd; 
+            cursor: not-allowed; 
+        }
+
+        /* UPDATED QUANTITY INPUT STYLES */
+        .item-qty-input {
+            width: 100%;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 5px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--dark);
+            background: white;
+            /* Hide Spinner arrows */
+            -moz-appearance: textfield; 
+        }
+        /* Hide Spinner arrows for Webkit */
+        .item-qty-input::-webkit-outer-spin-button,
+        .item-qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .item-qty-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* --- BOTTOM BAR --- */
+        .bottom-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            z-index: 900;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .finish-btn {
+            background: var(--dark);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3);
+            transition: transform 0.2s;
+        }
+        .finish-btn:hover { transform: scale(1.05); }
+
+        .receipt-total { 
+            font-weight: 800; 
+            font-size: 1.2rem; 
+            color: var(--danger);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen">
+        <div class="setup-card">
+            <img src="https://placehold.co/100x100/orange/white?text=$" alt="Logo" style="border-radius:50%; margin-bottom:20px;">
+            <h1>Spend The Money</h1>
+            <p>Enter your father's wealth below.<br>You can type: "10 crore", "5 million", "100k"</p>
+            
+            <div class="form-group">
+                <label>Father's Net Worth</label>
+                <input type="text" id="input-worth" placeholder="e.g. 10 Crore, 50 Billion...">
+            </div>
+
+            <div class="form-group">
+                <label>Select Currency</label>
+                <select id="currency-select">
+                    <option value="USD" data-rate="1" data-symbol="$">USD - Dollar ($)</option>
+                    <option value="PKR" data-rate="278.5" data-symbol="₨">PKR - Pak Rupee (₨)</option>
+                    <option value="INR" data-rate="83.9" data-symbol="₹">INR - Indian Rupee (₹)</option>
+                    <option value="EUR" data-rate="0.92" data-symbol="€">EUR - Euro (€)</option>
+                    <option value="GBP" data-rate="0.78" data-symbol="£">GBP - Pound (£)</option>
+                    <option value="JPY" data-rate="147" data-symbol="¥">JPY - Yen (¥)</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" onclick="startGame()">START GAME</button>
+        </div>
+    </div>
+
+    <div id="game-ui" style="display: none;">
+        <header id="main-header">
+            <div class="balance-container">
+                <div class="net-worth-label">Remaining Balance</div>
+                <div class="balance" id="display-balance">$0</div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="items-grid" id="items-container">
+                </div>
+        </div>
+
+        <div class="bottom-bar" id="bottom-bar" style="display:none;">
+            <div class="receipt-total" id="receipt-preview">Spent: 0</div>
+            <button class="finish-btn" onclick="openTimeModal()">Done Shopping</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="time-modal">
+        <div class="modal-content">
+            <h2>Just one question...</h2>
+            <p>How long did it take your father to earn all this money?</p>
+            <input type="text" id="father-time-input" class="modal-input" placeholder="e.g. 30 years, a lifetime...">
+            <button class="btn-primary" onclick="showFinalResult()">See Result</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal-content">
+            <img src="https://placehold.co/80x80/2ecc71/white?text=%" style="border-radius:50%; margin-bottom:15px;">
+            <h2 style="color:var(--dark);">Spending Report</h2>
+            <div id="result-text" style="font-size: 1.1rem; line-height: 1.6; color: #555;"></div>
+            <button class="finish-btn" style="margin-top:20px; background:var(--primary);" onclick="location.reload()">Play Again</button>
+        </div>
+    </div>
+
+<script>
+    // --- GLOBAL VARIABLES ---
+    let totalMoney = 0;
+    let currentBalance = 0;
+    let displayedBalance = 0; // For animation
+    let currencySymbol = '$';
+    let exchangeRate = 1;
+    let startTime = 0;
+    let cart = {}; 
+    let animationFrameId;
+
+    // --- ITEM DATABASE ---
+    const items = [
+        // Food & Daily
+        { name: "Bubble Gum", price: 0.5, img: "img/bubble-gum.jpg" },
+        { name: "Chai Cup", price: 1, img: "img/chai-cup.jpg" },
+        { name: "Newspaper", price: 2, img: "img/newspaper.jpg" },
+        { name: "Street Burger", price: 3, img: "img/street-burger.jpg" },
+        { name: "Large Pizza", price: 15, img: "img/large-pizza.jpg" },
+        { name: "Coffee Maker", price: 40, img: "img/coffee-maker.jpg" },
+        { name: "Sneakers", price: 80, img: "img/sneakers.jpg" },
+        { name: "Dinner for Two", price: 120, img: "img/dinner-for-two.jpg" },
+        
+        // Electronics
+        { name: "Airpods", price: 200, img: "img/airpods.jpg" },
+        { name: "Smart Watch", price: 350, img: "img/smart-watch.jpg" },
+        { name: "Gaming Console", price: 500, img: "img/gaming-console.jpg" },
+        { name: "Smartphone", price: 999, img: "img/smartphone.jpg" },
+        { name: "Drone", price: 1500, img: "img/drone.jpg" },
+        { name: "Gaming PC", price: 2500, img: "img/gaming-pc.jpg" },
+        { name: "8K TV", price: 4000, img: "img/8k-tv.jpg" },
+        
+        // Vehicles
+        { name: "Electric Scooter", price: 600, img: "img/electric-scooter.jpg" },
+        { name: "Motorbike", price: 2500, img: "img/motorbike.jpg" },
+        { name: "Used Sedan", price: 8000, img: "img/used-sedan.jpg" },
+        { name: "Jet Ski", price: 12000, img: "img/jet-ski.jpg" },
+        { name: "Family SUV", price: 35000, img: "img/family-suv.jpg" },
+        { name: "Tesla Model S", price: 90000, img: "img/tesla-model-s.jpg" },
+        { name: "Cyber Truck", price: 100000, img: "img/cyber-truck.jpg" },
+        { name: "Ferrari", price: 350000, img: "img/ferrari.jpg" },
+        { name: "Rolls Royce", price: 500000, img: "img/rolls-royce.jpg" },
+        { name: "Formula 1 Car", price: 15000000, img: "img/formula-1-car.jpg" },
+        { name: "Private Jet", price: 25000000, img: "img/private-jet.jpg" },
+        
+        // Luxury & Fashion
+        { name: "Gucci Bag", price: 2000, img: "img/gucci-bag.jpg" },
+        { name: "Diamond Ring", price: 15000, img: "img/diamond-ring.jpg" },
+        { name: "Rolex Watch", price: 25000, img: "img/rolex-watch.jpg" },
+        { name: "Gold Bar", price: 65000, img: "img/gold-bar.jpg" },
+        { name: "Rare Coin", price: 120000, img: "img/rare-coin.jpg" },
+        
+        // Real Estate
+        { name: "Tiny House", price: 45000, img: "img/tiny-house.jpg" },
+        { name: "Farm House", price: 250000, img: "img/farm-house.jpg" },
+        { name: "Luxury Apartment", price: 800000, img: "img/luxury-apartment.jpg" },
+        { name: "Beach House", price: 1500000, img: "img/beach-house.jpg" },
+        { name: "Mansion", price: 5000000, img: "img/mansion.jpg" },
+        { name: "Skyscraper", price: 850000000, img: "img/skyscraper.jpg" },
+        { name: "Private Island", price: 50000000, img: "img/private-island.jpg" },
+        
+        // Absurd / Large Scale
+        { name: "Race Horse", price: 50000, img: "img/race-horse.jpg" },
+        { name: "Tank", price: 6000000, img: "img/tank.jpg" },
+        { name: "Helicopter", price: 3000000, img: "img/helicopter.jpg" },
+        { name: "Super Yacht", price: 200000000, img: "img/super-yacht.jpg" },
+        { name: "Movie Production", price: 150000000, img: "img/movie-production.jpg" },
+        { name: "Rocket Launch", price: 60000000, img: "img/rocket-launch.jpg" },
+        { name: "NBA Team", price: 3000000000, img: "img/nba-team.jpg" },
+        { name: "Mona Lisa", price: 860000000, img: "img/mona-lisa.jpg" },
+        { name: "Cruise Ship", price: 1200000000, img: "img/cruise-ship.jpg" },
+        
+        // Random
+        { name: "Pet Tiger", price: 15000, img: "img/pet-tiger.jpg" },
+        { name: "Gold Toilet", price: 1000000, img: "img/gold-toilet.jpg" },
+        { name: "Moon Plot", price: 5000, img: "img/moon-plot.jpg" },
+        { name: "Twitter (X)", price: 44000000000, img: "img/twitter.jpg" },
+        { name: "Amazon", price: 1500000000000, img: "img/amazon.jpg" }
+    ];
+
+    // --- HELPER: Parse "10 crore", "5k", etc. ---
+    function parseMoneyInput(input) {
+        if (!input) return 0;
+        let str = input.toLowerCase().replace(/,/g, '').trim();
+        let multiplier = 1;
+
+        if (str.includes('crore') || str.includes('cr')) {
+            multiplier = 10000000;
+            str = str.replace('crore', '').replace('cr', '');
+        } else if (str.includes('lakh') || str.includes('lac') || str.includes('lk')) {
+            multiplier = 100000;
+            str = str.replace('lakh', '').replace('lac', '').replace('lk', '');
+        } else if (str.includes('k')) {
+            multiplier = 1000;
+            str = str.replace('k', '');
+        } else if (str.includes('m') && !str.includes('million')) { 
+            multiplier = 1000000;
+            str = str.replace('m', '');
+        } else if (str.includes('million')) {
+            multiplier = 1000000;
+            str = str.replace('million', '');
+        } else if (str.includes('billion') || str.includes('b')) {
+            multiplier = 1000000000;
+            str = str.replace('billion', '').replace('b', '');
+        }
+
+        let number = parseFloat(str);
+        return isNaN(number) ? 0 : number * multiplier;
+    }
+
+    // --- GAME FUNCTIONS ---
+
+    function startGame() {
+        const rawWorth = document.getElementById('input-worth').value;
+        const currencySelect = document.getElementById('currency-select');
+        const selectedOption = currencySelect.options[currencySelect.selectedIndex];
+
+        const parsedMoney = parseMoneyInput(rawWorth);
+        
+        if (parsedMoney <= 0) {
+            alert("Please enter a valid amount!");
+            return;
+        }
+
+        exchangeRate = parseFloat(selectedOption.getAttribute('data-rate'));
+        currencySymbol = selectedOption.getAttribute('data-symbol');
+        
+        totalMoney = parsedMoney;
+        currentBalance = totalMoney;
+        displayedBalance = totalMoney; 
+        startTime = Date.now();
+
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('game-ui').style.display = 'block';
+        
+        renderItems();
+        animateBalance(); 
+        
+        // Sticky Header Effect
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('main-header');
+            if (window.scrollY > 20) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    }
+
+    function formatMoney(amount) {
+        return currencySymbol + " " + Math.floor(amount).toLocaleString(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
+    // --- ANIMATION LOGIC ---
+    function animateBalance() {
+        const balanceElem = document.getElementById('display-balance');
+        const diff = currentBalance - displayedBalance;
+        
+        if (Math.abs(diff) < 1) {
+            displayedBalance = currentBalance;
+            balanceElem.innerText = formatMoney(displayedBalance);
+            cancelAnimationFrame(animationFrameId);
+            return;
+        }
+
+        displayedBalance += diff * 0.1;
+        balanceElem.innerText = formatMoney(displayedBalance);
+        animationFrameId = requestAnimationFrame(animateBalance);
+    }
+
+    function updateBalance() {
+        cancelAnimationFrame(animationFrameId);
+        animateBalance();
+
+        const spent = totalMoney - currentBalance;
+        const bottomBar = document.getElementById('bottom-bar');
+        
+        if (spent > 0) {
+            bottomBar.style.display = 'flex';
+            document.getElementById('receipt-preview').innerText = "Spent: " + formatMoney(spent);
+        } else {
+            bottomBar.style.display = 'none';
+        }
+    }
+
+    function renderItems() {
+        const container = document.getElementById('items-container');
+        container.innerHTML = '';
+
+        items.forEach((item, index) => {
+            const localPrice = item.price * exchangeRate;
+            const qty = cart[index] || 0;
+
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            
+            // UPDATED: Input field instead of text div
+            card.innerHTML = `
+                <div class="item-image-container">
+                    <img src="${item.img}" alt="${item.name}" class="item-image">
+                </div>
+                <div class="item-details">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">${formatMoney(localPrice)}</div>
+                    <div class="controls">
+                        <button class="btn-control btn-sell" 
+                                onclick="sellItem(${index})" 
+                                ${qty === 0 ? 'disabled' : ''}>Sell</button>
+                        
+                        <input type="number" 
+                               class="item-qty-input" 
+                               value="${qty}" 
+                               min="0"
+                               onchange="handleQtyChange(${index}, this.value)">
+
+                        <button class="btn-control btn-buy" 
+                                onclick="buyItem(${index})" 
+                                ${currentBalance < localPrice ? 'disabled' : ''}>Buy</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function buyItem(index) {
+        const localPrice = items[index].price * exchangeRate;
+        if (currentBalance >= localPrice) {
+            currentBalance -= localPrice;
+            cart[index] = (cart[index] || 0) + 1;
+            updateBalance();
+            renderItems();
+        }
+    }
+
+    function sellItem(index) {
+        const localPrice = items[index].price * exchangeRate;
+        if (cart[index] > 0) {
+            currentBalance += localPrice;
+            cart[index]--;
+            if (cart[index] === 0) delete cart[index];
+            updateBalance();
+            renderItems();
+        }
+    }
+
+    // --- NEW FUNCTION: Handle Manual Input ---
+    function handleQtyChange(index, value) {
+        let newQty = parseInt(value);
+        if(isNaN(newQty) || newQty < 0) newQty = 0;
+
+        const currentQty = cart[index] || 0;
+        const diff = newQty - currentQty;
+        const itemPrice = items[index].price * exchangeRate;
+
+        if (diff > 0) {
+            // Trying to buy more
+            const cost = diff * itemPrice;
+            if (currentBalance >= cost) {
+                currentBalance -= cost;
+                cart[index] = newQty;
+            } else {
+                // Not enough money, buy max possible
+                const maxAffordable = Math.floor(currentBalance / itemPrice);
+                cart[index] = currentQty + maxAffordable;
+                currentBalance -= (maxAffordable * itemPrice);
+                // We could alert here, but the UI update handles showing the "real" number
+            }
+        } else if (diff < 0) {
+            // Trying to sell (diff is negative)
+            const refund = Math.abs(diff) * itemPrice;
+            currentBalance += refund;
+            cart[index] = newQty;
+        }
+
+        // Cleanup empty items
+        if (cart[index] <= 0) delete cart[index];
+
+        updateBalance();
+        renderItems();
+    }
+
+    // --- FINISH LOGIC & RECEIPT ---
+
+    function openTimeModal() {
+        document.getElementById('time-modal').classList.add('active');
+    }
+
+    function showFinalResult() {
+        const fatherTime = document.getElementById('father-time-input').value || "a lifetime";
+        const timeSpentMs = Date.now() - startTime;
+        const timeSpentSeconds = Math.floor(timeSpentMs / 1000);
+        let timeText = "";
+        
+        if(timeSpentSeconds < 60) {
+            timeText = timeSpentSeconds + " seconds";
+        } else {
+            timeText = Math.floor(timeSpentSeconds/60) + " minutes";
+        }
+        
+        const spentAmount = totalMoney - currentBalance;
+        const percent = ((spentAmount / totalMoney) * 100).toFixed(6);
+
+        // RECEIPT HTML
+        let receiptHTML = `
+            <div class="receipt-container">
+                <div class="receipt-header">Shopping Receipt</div>
+        `;
+        
+        const cartIndices = Object.keys(cart);
+        if (cartIndices.length === 0) {
+            receiptHTML += `<div class="receipt-item" style="justify-content:center; color:#999;">No items purchased</div>`;
+        } else {
+            cartIndices.forEach(index => {
+                const qty = cart[index];
+                const item = items[index];
+                const localPrice = item.price * exchangeRate;
+                const totalItemPrice = localPrice * qty;
+                
+                receiptHTML += `
+                    <div class="receipt-item">
+                        <span>${qty}x ${item.name}</span>
+                        <span>${formatMoney(totalItemPrice)}</span>
+                    </div>
+                `;
+            });
+        }
+        
+        receiptHTML += `
+                <div class="receipt-divider"></div>
+                <div class="receipt-total-line">
+                    <span>TOTAL SPENT</span>
+                    <span>${formatMoney(spentAmount)}</span>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('time-modal').classList.remove('active');
+        const resultModal = document.getElementById('result-modal');
+        const resultText = document.getElementById('result-text');
+
+        let message = `
+            <p>
+                You managed to spend <strong>${formatMoney(spentAmount)}</strong>.<br>
+                That is roughly <strong>${percent}%</strong> of the total fortune.<br>
+                While it took your father <strong>${fatherTime}</strong> to build this empire,
+                you successfully wasted it in <strong>${timeText}</strong>.
+            </p>
+            ${receiptHTML}
+        `;
+
+        resultText.innerHTML = message;
+        resultModal.classList.add('active');
+    }
+
+</script>
+</body>
+</html>

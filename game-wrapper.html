@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naino Games | Playing...</title>
+    
+    <link rel="stylesheet" href="style.css"> 
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+
+    <style>
+        :root {
+            --hero-match-color: var(--accent-glow); 
+        }
+
+        .game-view-container {
+            width: 100%;
+            padding-top: 80px; 
+            padding-bottom: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: radial-gradient(circle at center, rgba(30,30,40,0.5) 0%, transparent 70%);
+        }
+
+        .game-iframe {
+            display: block; 
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #000;
+            box-shadow: none;
+            border-radius: 0;
+            margin: 0;
+            transition: all 0.3s ease; 
+        }
+
+        /* --- FRAME CONTROLS --- */
+        .game-frame-wrapper {
+            margin: 20px auto 0;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.1); 
+            border-radius: 12px;
+            overflow: hidden; 
+            background-color: #000; 
+            max-width: 100%;
+            position: relative;
+        }
+        
+        /* PC / UNIFIED GAME ASPECT RATIO (Widescreen) */
+        @media (min-width: 769px) {
+            .pc-game-frame {
+                width: 85vw; 
+                max-width: 1200px;
+                height: calc(85vw * 9 / 16); 
+                max-height: 675px; 
+            }
+        }
+
+        /* MOBILE GAME ASPECT RATIO (Portrait) */
+        /* Used for Android-only games even on PC */
+        @media (min-width: 769px) {
+            .mobile-game-frame {
+                width: 420px; 
+                height: 746px; 
+                max-height: 85vh;
+                border: 2px solid #333;
+                border-radius: 20px; 
+            }
+        }
+
+        /* --- AUTOMATIC RESPONSIVE ADJUSTMENT --- */
+        /* If screen is small (Phone/Tablet), ignore PC/Mobile shapes and fill screen */
+        @media (max-width: 768px) {
+            .game-frame-wrapper {
+                width: 100%;
+                height: calc(100vh - 80px);
+                margin: 0;
+                border-radius: 0;
+                border: none;
+            }
+        }
+        
+        .back-button-bar {
+            padding: 15px 5%;
+            width: 100%;
+            display: flex; 
+            justify-content: center; 
+            gap: 15px; 
+        }
+        
+        .control-button {
+            padding: 10px 25px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-radius: 6px; 
+            transition: 0.3s;
+            text-transform: uppercase;
+            cursor: pointer; 
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(10,10,10,0.8);
+            color: #fff;
+            backdrop-filter: blur(5px);
+        }
+        
+        .control-button:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(187, 134, 252, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo-link">
+            <div class="logo">NAINO GAMES</div>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html#games">Library</a></li>
+            <li><a href="index.html#about">About</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="game-view-container">
+        <div class="back-button-bar">
+             <a href="index.html#games" class="control-button">Back to Library</a>
+             <button id="fullscreen-btn" class="control-button">Full Screen</button>
+        </div>
+        
+        <div id="game-frame-wrapper" class="game-frame-wrapper">
+            <iframe id="game-iframe" class="game-iframe" src="" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const iframe = document.getElementById('game-iframe');
+            const wrapper = document.getElementById('game-frame-wrapper');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameSrc = urlParams.get('src');
+
+            if (gameSrc) {
+                const decodedSrc = decodeURIComponent(gameSrc);
+                iframe.src = decodedSrc;
+
+                const parts = decodedSrc.split('/'); 
+                const gameName = parts.length > 2 ? parts[2].toUpperCase().replace(/_/g, ' ') : "GAME";
+                document.title = `Naino Games | Playing: ${gameName}`;
+
+                // --- SMART WRAPPER DETECTION ---
+                // 1. If path explicitly says /mobile/, use Mobile Shape.
+                // 2. If it's the new "nainobubble" (Android Only), force Mobile Shape.
+                // 3. Otherwise (PC only, Unified, etc), use PC Shape.
+                // NOTE: The CSS @media(max-width: 768px) automatically overrides ALL of this 
+                // on actual mobile devices to ensure full-screen play.
+                
+                if (decodedSrc.includes('/mobile/') || decodedSrc.includes('nainobubble')) {
+                    wrapper.classList.add('mobile-game-frame');
+                } else {
+                    wrapper.classList.add('pc-game-frame');
+                }
+                
+            } else {
+                iframe.src = 'index.html#games'; 
+                document.title = "Naino Games | Error";
+            }
+
+            // --- FULLSCREEN LOGIC ---
+            fullscreenBtn.addEventListener('click', () => {
+                const target = wrapper; 
+                if (target.requestFullscreen) {
+                    target.requestFullscreen();
+                } else if (target.webkitRequestFullscreen) { 
+                    target.webkitRequestFullscreen();
+                } else if (target.msRequestFullscreen) { 
+                    target.msRequestFullscreen();
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                if (document.fullscreenElement) {
+                    fullscreenBtn.textContent = 'Exit Full Screen (ESC)';
+                } else {
+                    fullscreenBtn.textContent = 'Full Screen';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

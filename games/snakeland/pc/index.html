@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SNAKE LAND</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Nosifier&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Theme Definitions */
+        :root, .theme-twilight {
+            --bg-dark: #1f1a30;
+            --bg-medium: #302b45;
+            --primary: #ff6e40;
+            --secondary: #ff4081;
+            --highlight: #b08dff;
+            --text-light: #f0f0f0;
+            --ui-border: #ff6e40;
+            --canvas-border: #b08dff;
+            --canvas-base: #302b45;
+            --button-bg: #b08dff;
+            --button-text: #1f1a30;
+            --button-shadow: #7e64cc;
+            /* Custom Defaults */
+            --custom-food-color: var(--secondary);
+            --custom-bonus-color: #FFFF00; 
+            --custom-obstacle-stroke: #0000FF; 
+            --custom-snake-outline: #FFFFFF; 
+            --snake-head-color: #008000;
+            --snake-body-color: #006400;
+            --snake-eye-color: var(--bg-dark);
+        }
+
+        .theme-forest {
+            --bg-dark: #1f2e1f;
+            --bg-medium: #355e3b;
+            --primary: #f0a058;
+            --secondary: #ff4040;
+            --highlight: #a8d582;
+            --text-light: #f0f0f0;
+            --ui-border: #f0a058;
+            --canvas-border: #a8d582;
+            --canvas-base: #4f772d;
+            --button-bg: #a8d582;
+            --button-text: #1f2e1f;
+            --button-shadow: #7aa552;
+            --snake-eye-color: var(--bg-dark);
+        }
+
+        .theme-seas {
+            --bg-dark: #004d40;
+            --bg-medium: #00897b;
+            --primary: #ffb300;
+            --secondary: #ff5252;
+            --highlight: #e0f2f1;
+            --text-light: #e0f2f1;
+            --ui-border: #ffb300;
+            --canvas-border: #ffb300;
+            --canvas-base: #004d40;
+            --button-bg: #e0f2f1;
+            --button-text: #004d40;
+            --button-shadow: #b3c7c6;
+            --snake-eye-color: var(--bg-dark);
+        }
+        
+        .theme-vampire {
+            --bg-dark: #21031f;
+            --bg-medium: #3a1532;
+            --primary: #b71c1c;
+            --secondary: #ffeb3b;
+            --highlight: #ffcdd2;
+            --text-light: #fbe9e7;
+            --ui-border: #ffcdd2;
+            --canvas-border: #b71c1c;
+            --canvas-base: #21031f;
+            --button-bg: #b71c1c;
+            --button-text: #fbe9e7;
+            --button-shadow: #881414;
+            --snake-eye-color: var(--text-light);
+        }
+        
+        .theme-solar {
+            --bg-dark: #1a0000;
+            --bg-medium: #4d0000;
+            --primary: #ff8c00;
+            --secondary: #ffff00;
+            --highlight: #ff4500;
+            --text-light: #ffffff;
+            --ui-border: #ff8c00;
+            --canvas-border: #ff4500;
+            --canvas-base: #4d0000;
+            --button-bg: #ff8c00;
+            --button-text: #1a0000;
+            --button-shadow: #cc6600;
+            --snake-eye-color: var(--bg-dark);
+        }
+        
+        .theme-mono {
+            --bg-dark: #111111;
+            --bg-medium: #333333;
+            --primary: #cccccc;
+            --secondary: #ffffff;
+            --highlight: #999999;
+            --text-light: #ffffff;
+            --ui-border: #999999;
+            --canvas-border: #cccccc;
+            --canvas-base: #111111;
+            --button-bg: #cccccc;
+            --button-text: #111111;
+            --button-shadow: #777777;
+            --snake-eye-color: #111111;
+        }
+
+        /* Global Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-dark); 
+            color: var(--text-light);
+            user-select: none;
+            overflow: hidden; /* Prevent scrolling body */
+            touch-action: none; /* Important for mobile swipe */
+            transition: background-color 0.3s;
+        }
+
+        body.theme-twilight, body.theme-forest, body.theme-seas, body.theme-vampire, body.theme-solar, body.theme-mono {
+            background-color: var(--bg-dark); 
+            color: var(--text-light);
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            background-color: var(--bg-medium); 
+            /* Removed fixed shadows/borders for mobile full screen feel */
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            text-align: center;
+            position: relative; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen {
+            background-color: var(--bg-medium); 
+            padding: 20px 10px 80px 10px; /* Added bottom padding for scroll */
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none; 
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: center;
+            box-sizing: border-box;
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+            z-index: 50; 
+        }
+
+        .screen.active {
+            display: flex; 
+        }
+        
+        /* Mobile Typography Adjustments */
+        h1 {
+            color: var(--primary); 
+            font-size: 8vh; /* Responsive font size */
+            margin-top: 5vh;
+            margin-bottom: 0.2em;
+            text-shadow: 2px 2px var(--bg-dark);
+            font-family: 'Nosifier', sans-serif;
+            line-height: 1;
+        }
+
+        h2 {
+            color: var(--highlight);
+            margin-bottom: 0.5em;
+            font-size: 5vh;
+            text-shadow: 1px 1px var(--bg-dark);
+        }
+        
+        #main-menu {
+             justify-content: center; 
+             position: relative; 
+        }
+        
+        #menu-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+            opacity: 0.2;
+        }
+        
+        #main-menu > * {
+            position: relative;
+            z-index: 5; 
+        }
+        
+        #main-menu .menu-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px; 
+            margin: auto; 
+            padding-bottom: 50px;
+        }
+        
+        #main-menu .menu-button-group {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             width: 100%;
+             max-width: 350px; 
+             margin-top: 20px;
+        }
+        #main-menu button {
+             width: 90%;
+             max-width: 350px;
+        }
+
+        button {
+            background-color: var(--button-bg); 
+            color: var(--button-text); 
+            border: none;
+            padding: 15px 20px;
+            margin: 8px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s, transform 0.1s;
+            width: 85%;
+            max-width: 400px;
+            box-shadow: 0 4px 0 var(--button-shadow); 
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:hover {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            box-shadow: 0 4px 0 var(--bg-dark);
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 var(--bg-dark);
+        }
+        
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        #game-info {
+            color: var(--text-light); 
+            font-size: 0.9em;
+            width: 95%; 
+            max-width: 600px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr; 
+            grid-template-areas: 
+                "score pause target"
+                "level level level";
+            gap: 5px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--highlight);
+            margin-bottom: 10px;
+        }
+
+        #score-display { grid-area: score; text-align: left; color: var(--highlight); font-weight: bold;}
+        #level-display { grid-area: level; text-align: center; color: var(--primary); font-weight: bold; font-size: 0.9em;}
+        #target-display { grid-area: target; text-align: right; font-size: 0.9em;}
+        
+        /* Responsive Canvas */
+        #game-canvas {
+            border: 2px solid var(--canvas-border); 
+            background-color: var(--canvas-base); 
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.4); 
+            touch-action: none; 
+            width: 96vw; /* Fit width of mobile */
+            height: auto;
+            max-width: 600px; /* Don't get huge on tablet/desktop */
+            aspect-ratio: 1 / 1; /* Keep it square */
+        }
+        
+        #pause-toggle-button {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            margin: 0;
+            font-size: 1.5em;
+            line-height: 40px;
+            border-radius: 50%;
+            box-shadow: 0 3px 0 var(--bg-dark);
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            grid-area: pause; 
+            justify-self: center;
+        }
+        
+        .ui-box {
+            width: 92%;
+            max-width: 550px;
+            margin: 10px auto;
+            padding: 15px;
+            background-color: var(--bg-dark); 
+            border: 2px solid var(--highlight);
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        .ui-box p, .ui-box h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        
+        #theme-selection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .theme-tile {
+            background-color: var(--bg-medium); 
+            border: 2px solid var(--highlight);
+            color: var(--text-light);
+            padding: 10px 2px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            font-size: 0.7em; 
+            text-align: center;
+        }
+
+        .theme-tile.selected {
+            background-color: var(--primary);
+            color: var(--bg-dark);
+            border-color: var(--secondary);
+            box-shadow: 0 0 5px var(--secondary);
+        }
+        
+        #customization-menu {
+             padding-top: 20px;
+        }
+        
+        .custom-section-title {
+             background-color: var(--primary);
+             color: var(--bg-dark);
+             padding: 8px 15px;
+             border-radius: 8px;
+             margin-top: 15px;
+             margin-bottom: 10px;
+             font-size: 1.1em;
+             width: 85%;
+             max-width: 500px;
+             text-align: center;
+             border: 2px solid var(--highlight);
+             font-weight: bold;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 10px;
+            padding: 5px 0;
+        }
+        
+        .color-item {
+            cursor: pointer;
+            transition: transform 0.1s;
+            text-align: center;
+        }
+        
+        .color-option {
+            width: 35px; /* Smaller for mobile */
+            height: 35px; 
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 3px;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            background-clip: padding-box;
+        }
+        
+        .color-item[data-hex="#FFFFFF"] .color-option {
+             border-color: #000000;
+        }
+
+        .color-item.selected .color-option {
+            border-color: var(--secondary);
+            box-shadow: 0 0 10px var(--secondary); 
+            transform: scale(1.1);
+        }
+        
+         .color-item.selected[data-hex="#FFFFFF"] .color-option {
+             border-color: var(--secondary); 
+             box-shadow: 0 0 10px var(--secondary);
+        }
+        
+        .color-name {
+            font-size: 0.6em;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            display: none; /* Hide names on mobile to save space, or keep if room */
+        }
+        @media (min-width: 400px) {
+            .color-name { display: block; }
+        }
+        
+        /* SHAPE SELECTOR STYLES */
+        #shape-select-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .shape-button {
+            background-color: var(--bg-medium);
+            border: 2px solid var(--primary);
+            color: var(--text-light);
+            padding: 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            height: 60px;
+            font-size: 0.8em;
+        }
+        
+        .shape-button.selected {
+            background-color: var(--primary);
+            color: var(--bg-dark);
+            box-shadow: 0 0 8px var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        .shape-icon {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 5px;
+            background-color: var(--text-light);
+        }
+        
+        .icon-square { border-radius: 0; }
+        .icon-circle { border-radius: 50%; }
+        .icon-rounded { border-radius: 4px; }
+        .icon-diamond { transform: rotate(45deg) scale(0.8); }
+        .icon-ring { background: transparent; border: 3px solid var(--text-light); border-radius: 50%; width: 16px; height: 16px; }
+        .icon-star { 
+            background: transparent; 
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); 
+            background-color: var(--text-light);
+        }
+
+        
+        #speed-select-group {
+             display: grid;
+             grid-template-columns: repeat(2, 1fr); /* 2x2 for mobile */
+             gap: 8px;
+        }
+
+        .speed-button {
+            width: 100%;
+            padding: 8px 5px;
+            margin: 0; 
+            font-size: 0.9em;
+            border-radius: 10px;
+        }
+        
+        .speed-button.selected {
+            background-color: var(--primary); 
+            color: var(--bg-dark);
+            border-color: var(--secondary);
+            box-shadow: 0 0 8px var(--secondary);
+        }
+        
+        /* Info Button */
+        #info-button {
+            position: absolute;
+            top: 20px; /* Moved to top left */
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: var(--bg-medium);
+            color: var(--highlight);
+            border: 2px solid var(--highlight);
+            border-radius: 50%;
+            font-size: 1.2em;
+            font-family: serif; 
+            font-style: italic;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+        
+        #info-button:hover {
+            background-color: var(--secondary);
+            color: var(--text-light);
+            border-color: var(--secondary);
+            transform: scale(1.1);
+        }
+        
+        #level-select-content {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             width: 95%;
+             max-width: 550px;
+             margin: 10px auto;
+        }
+        
+        #level-card-wrapper {
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+             width: 100%;
+             margin: 10px 0;
+             padding: 0; 
+        }
+
+        .level-nav-button {
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            margin: 0 5px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            line-height: 45px;
+            background-color: var(--primary);
+            color: var(--bg-dark);
+            box-shadow: 0 3px 0 var(--button-shadow);
+            flex-shrink: 0;
+        }
+        
+        .level-nav-button:hover {
+             background-color: var(--secondary);
+             color: var(--text-light);
+        }
+
+        #level-display-card {
+            background-color: var(--bg-dark); 
+            border: 3px solid var(--highlight);
+            border-radius: 15px;
+            padding: 10px;
+            flex-grow: 1; 
+            box-shadow: 0 0 10px var(--primary); 
+            text-align: center;
+            min-width: 0; /* Prevents flex overflow */
+        }
+
+        #level-number-display {
+             font-size: 2.5em;
+             color: var(--secondary);
+             margin-bottom: 0;
+             line-height: 1em;
+        }
+        #level-name-display {
+             font-size: 1.2em;
+             color: var(--primary);
+             margin-top: 5px;
+             margin-bottom: 10px;
+        }
+        
+        #level-visualization-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+            min-height: 120px;
+        }
+
+        #level-map-preview {
+            border: 2px solid var(--canvas-border); 
+            box-shadow: 0 0 10px var(--secondary); 
+            width: 120px; /* Responsive size */
+            height: 120px;
+        }
+
+        #level-description-box {
+            background-color: var(--bg-medium);
+            border: 1px dashed var(--highlight);
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        #level-desc-display { 
+            font-size: 0.8em; 
+            opacity: 0.8; 
+            margin-bottom: 0;
+            margin-top: 5px;
+        }
+
+        /* Slider Styling */
+        #snake-size-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            outline: none;
+            transition: opacity .2s;
+            border: 1px solid var(--highlight);
+        }
+
+        #snake-size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--secondary);
+        }
+
+        #snake-size-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--secondary);
+        }
+
+        /* Info Pop-up Styles */
+        #info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); 
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        #info-content {
+            background-color: var(--bg-medium); 
+            color: var(--text-light);          
+            padding: 30px 20px;
+            border-radius: 20px;
+            width: 85%;
+            max-width: 400px;
+            box-shadow: 0 0 30px var(--primary); 
+            text-align: center;
+            border: 3px solid var(--highlight);   
+            animation: popIn 0.3s ease-out;
+        }
+        
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        #info-content h2 {
+            color: var(--primary); 
+            margin-top: 0;
+            font-size: 1.5em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .info-detail {
+            margin-bottom: 15px;
+            font-size: 1em;
+            line-height: 1.4;
+        }
+        
+        .info-label {
+            color: var(--highlight);
+            font-weight: bold;
+            display: block;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .youtube-link {
+            display: inline-block;
+            background-color: #ff0000;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 0.9em;
+        }
+        
+        .youtube-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 0, 0, 0.4);
+        }
+        
+        #info-content button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            margin-top: 20px;
+            width: 60%;
+        }
+        
+    </style>
+</head>
+<body class="">
+    <div id="game-container">
+        
+        <div id="info-button" title="Credits & Info">i</div> 
+
+        <div id="main-menu" class="screen active">
+             <canvas id="menu-canvas"></canvas> 
+            
+            <div class="menu-content">
+                <h1>SNAKE LAND</h1>
+                <p style="color: var(--highlight); margin-bottom: 40px; font-weight: bold; letter-spacing: 1px;">V1</p>
+                
+                <div class="menu-button-group">
+                    <button id="level-select-button">Start / Level Select</button>
+                    <button id="customization-button">Customization</button>
+                    <button id="toggle-music">Sounds: ON</button>
+                </div>
+                
+                <p id="high-score-display" style="margin-top: 30px;">CLASSIC HIGH SCORE: 0</p>
+                <p style="font-size: 0.8em; color: var(--primary); margin-top: 20px; width: 80%; text-align: center;">
+                    TIP: Bonus Food appears rarely. Be quick!
+                </p>
+            </div>
+        </div>
+
+        <div id="customization-menu" class="screen">
+            <h2>CUSTOMIZE</h2>
+            
+            <div class="custom-section-title">CHOOSE UI THEME</div>
+            <div class="ui-box">
+                <div id="theme-selection"></div>
+            </div>
+
+            <div class="custom-section-title" style="background-color: var(--secondary); color: var(--bg-dark);">APPEARANCE</div>
+            
+            <div class="ui-box">
+                <h3 style="color: var(--highlight); margin-top: 0;">SNAKE SIZE</h3>
+                <div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 10px 0;">
+                    <span style="margin-right: 10px; font-size: 0.8em;">Small</span>
+                    <input type="range" id="snake-size-slider" min="0.5" max="1.2" value="1.0" step="0.05" style="flex-grow: 1;">
+                    <span style="margin-left: 10px; font-size: 0.8em;">Large</span>
+                </div>
+                <p id="size-label" style="margin-top: 5px; color: var(--primary); font-weight: bold; font-size: 0.8em;">Size: 100%</p>
+            </div>
+            
+            <div class="ui-box">
+                <h3 style="color: var(--highlight); margin-top: 0;">SNAKE SHAPE</h3>
+                <div id="shape-select-group"></div>
+            </div>
+
+            <div class="ui-box">
+                <h3 style="color: var(--highlight); margin-top: 0;">HEAD & BODY</h3>
+                <div id="snake-color-selection" class="color-grid"></div>
+            </div>
+            
+            <div class="ui-box">
+                 <h3 style="color: var(--highlight); margin-top: 0;">BODY OUTLINE</h3>
+                 <div id="snake-outline-selection" class="color-grid"></div>
+            </div>
+
+
+            <div class="custom-section-title">COLORS</div>
+            <div class="ui-box">
+                <h3 style="color: var(--primary); margin-top: 0;">FOOD</h3>
+                <div id="food-color-selection" class="color-grid"></div>
+                
+                 <hr style="border: 1px solid var(--bg-medium); margin: 10px 0;">
+                
+                <h3 style="color: var(--primary); margin-top: 0;">BONUS FOOD</h3>
+                <div id="bonus-color-selection" class="color-grid"></div>
+                
+                <hr style="border: 1px solid var(--bg-medium); margin: 10px 0;">
+                
+                 <h3 style="color: var(--primary); margin-top: 0;">OBSTACLES</h3>
+                <div id="obstacle-stroke-selection" class="color-grid"></div>
+            </div>
+            
+            <button id="back-to-main-from-custom" style="margin-top: 20px; margin-bottom: 50px;">Back to Menu</button>
+        </div>
+
+
+        <div id="level-select-menu" class="screen">
+            <h2>LEVELS</h2>
+            
+            <div id="level-select-content">
+                
+                <div id="level-card-wrapper">
+                    <button class="level-nav-button" id="prev-level-button"> < </button>
+                    
+                    <div id="level-display-card">
+                        <div id="level-number-display">1</div>
+                        <div id="level-name-display">Classic Mode</div>
+                        
+                        <div id="level-visualization-area"></div>
+                        
+                        <div id="level-description-box">
+                             <h3 id="level-mode-display" style="color: var(--highlight); margin-top: 0; font-size: 1em; margin-bottom: 5px;"></h3>
+                             <p id="level-goal-display" style="font-size: 0.8em; font-weight: bold;"></p>
+                             <p id="level-desc-display"></p>
+                        </div>
+                    </div>
+                    
+                    <button class="level-nav-button" id="next-level-button"> > </button>
+                </div>
+                
+                <div class="ui-box" style="width: 100%;">
+                    <h3 style="color: var(--highlight); margin-top: 0;">GAME SPEED</h3> 
+                    <div id="speed-select-group"></div>
+                </div>
+                
+            </div>
+            
+            <button id="start-selected-level" style="margin-top: 10px;">START LEVEL 1</button>
+            <button id="back-to-main-from-level" style="margin-bottom: 40px;">Back</button>
+        </div>
+        
+
+        <div id="game-play" class="screen">
+            <div id="pause-screen" class="screen" style="z-index: 60; background-color: rgba(0,0,0,0.8);">
+                <h2 style="margin-top: 20vh;">PAUSED</h2>
+                <p>Press 'Resume' to continue.</p>
+                <button id="resume-button">RESUME</button>
+                <button id="main-menu-from-pause">MAIN MENU</button>
+            </div>
+            
+            <div id="game-area">
+                <div id="game-info">
+                    <span id="score-display">SCORE: 0</span>
+                    <span id="level-display">LVL 1</span>
+                    <button id="pause-toggle-button">II</button> 
+                    <div id="target-display" class="target-display"></div>
+                </div>
+                <canvas id="game-canvas" width="600" height="600"></canvas>
+                
+                <p style="color: var(--primary); font-size: 0.9em; margin-top: 15px;">
+                    Use WASD or ARROW KEYS to move!
+                </p>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="screen">
+            <h2 style="margin-top: 15vh;">GAME OVER</h2>
+            <p id="final-score" style="font-size: 1.2em; font-weight: bold;">Final Score: 0</p>
+            <div id="level-complete-message" style="margin: 20px 0;"></div>
+            <button id="restart-button">RETRY LEVEL</button>
+            <button id="main-menu-button-go">MAIN MENU</button>
+        </div>
+
+        <div id="level-complete-screen" class="screen">
+            <h2 id="level-complete-title" style="margin-top: 15vh;">LEVEL 1 CLEARED!</h2>
+            <p id="level-complete-score" style="font-size: 1.2em; font-weight: bold;">Final Score: 0</p>
+            <button id="continue-level-button">CONTINUE</button>
+            <button id="main-menu-button-lc">MAIN MENU</button>
+        </div>
+
+
+    </div>
+    
+    <div id="info-modal">
+        <div id="info-content">
+            <h2>About Snake Land</h2>
+            
+            <div class="info-detail">
+                <span class="info-label">Version</span>
+                V1.0
+            </div>
+
+            <div class="info-detail">
+                <span class="info-label">Developer</span>
+                Nawab Husnain
+            </div>
+            
+            <div class="info-detail">
+                <span class="info-label">Check Out My Channel</span>
+                <p style="margin: 5px 0 15px 0; font-size: 0.9em; opacity: 0.8;">I create professional Minecraft content and gaming videos.</p>
+                <a href="https://www.youtube.com/@BuntyZZ" target="_blank" class="youtube-link">
+                    Visit BuntyZZ on YouTube
+                </a>
+            </div>
+            
+            <button id="close-info-modal">CLOSE</button>
+        </div>
+    </div>
+    
+    <script>
+        
+        // Web Audio Controller Class
+        class AudioController {
+            constructor() {
+                this.audioCtx = null;
+                this.bgOscillator = null;
+                this.bgGain = null;
+                this.soundsOn = true; 
+                this.hasUserInteracted = false;
+                
+                const initHandler = this.initAudio.bind(this);
+                document.body.addEventListener('click', initHandler, { once: true, capture: true });
+                document.body.addEventListener('keydown', initHandler, { once: true, capture: true });
+                document.body.addEventListener('touchstart', initHandler, { once: true, capture: true });
+            }
+
+            initAudio() {
+                if (this.hasUserInteracted) return;
+                try {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    this.hasUserInteracted = true;
+                    if (this.audioCtx.state === 'suspended') {
+                         this.audioCtx.resume().catch(e => { this.soundsOn = false; this.updateMusicButtonUI(); });
+                    } else {
+                        this.startBackgroundMusic();
+                    }
+                } catch (e) {
+                    this.soundsOn = false; 
+                    this.updateMusicButtonUI();
+                }
+            }
+            
+            updateMusicButtonUI() {
+                const btn = document.getElementById('toggle-music');
+                if (btn) btn.textContent = `Sounds: ${this.soundsOn ? 'ON' : 'OFF'}`;
+            }
+
+            playSfx(frequency, duration, type = 'sine', volume = 0.4, attack = 0.01, release = 0.05, slideTo = null) {
+                if (!this.soundsOn || !this.audioCtx || this.audioCtx.state !== 'running') {
+                    if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                    return;
+                }
+                const oscillator = this.audioCtx.createOscillator();
+                const gainNode = this.audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioCtx.destination);
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(frequency, this.audioCtx.currentTime);
+                if (slideTo) {
+                    oscillator.frequency.exponentialRampToValueAtTime(slideTo, this.audioCtx.currentTime + duration);
+                }
+                gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(volume, this.audioCtx.currentTime + attack);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+                oscillator.start();
+                oscillator.stop(this.audioCtx.currentTime + duration);
+            }
+
+            playEatFx() { this.playSfx(600, 0.1, 'sine', 0.3, 0.005, 0.1, 1200); setTimeout(() => this.playSfx(1200, 0.1, 'sine', 0.2, 0.005, 0.1), 50); }
+            playBonusFx() { this.playSfx(880, 0.3, 'triangle', 0.4, 0.01, 0.3); setTimeout(() => this.playSfx(1320, 0.3, 'sine', 0.3, 0.01, 0.3), 100); setTimeout(() => this.playSfx(1760, 0.4, 'sine', 0.2, 0.01, 0.4), 200); }
+            playMenuClickFx() { this.playSfx(400, 0.05, 'triangle', 0.3, 0.001, 0.02); }
+            playGameOverFx() { this.playSfx(300, 0.6, 'sawtooth', 0.4, 0.01, 0.5, 50); setTimeout(() => this.playSfx(200, 0.6, 'square', 0.3, 0.01, 0.5, 30), 100); }
+            playWallHitFx() { this.playSfx(100, 0.1, 'square', 0.5, 0.001, 0.1, 50); }
+
+            startBackgroundMusic() {
+                if (!this.audioCtx || this.bgOscillator) return;
+                this.bgOscillator = this.audioCtx.createOscillator();
+                this.bgGain = this.audioCtx.createGain();
+                this.bgOscillator.type = 'triangle'; 
+                this.bgOscillator.frequency.setValueAtTime(55, this.audioCtx.currentTime); 
+                const filter = this.audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(200, this.audioCtx.currentTime);
+                this.bgOscillator.connect(filter);
+                filter.connect(this.bgGain);
+                this.bgGain.connect(this.audioCtx.destination);
+                const lfo = this.audioCtx.createOscillator();
+                lfo.frequency.setValueAtTime(0.5, this.audioCtx.currentTime); 
+                const lfoGain = this.audioCtx.createGain();
+                lfoGain.gain.setValueAtTime(0.1, this.audioCtx.currentTime); 
+                lfo.connect(lfoGain);
+                lfoGain.connect(this.bgGain.gain);
+                lfo.start();
+                this.bgOscillator.start();
+                let initialVolume = 0;
+                if (this.soundsOn) { 
+                    initialVolume = document.getElementById('main-menu').classList.contains('active') ? 0.3 : 0.1;
+                }
+                this.bgGain.gain.setValueAtTime(initialVolume, this.audioCtx.currentTime); 
+            }
+
+            setMusicVolume(volume, duration = 0.5) {
+                if (this.bgGain && this.audioCtx && this.audioCtx.state === 'running') {
+                    const safeVolume = Math.max(0, volume); 
+                    this.bgGain.gain.linearRampToValueAtTime(safeVolume, this.audioCtx.currentTime + duration);
+                }
+            }
+
+            toggleMusic() {
+                this.initAudio();
+                this.soundsOn = !this.soundsOn; 
+                this.updateMusicButtonUI();
+                if (this.soundsOn) { 
+                    const targetVol = document.getElementById('main-menu').classList.contains('active') ? 0.3 : 0.1; 
+                    this.setMusicVolume(targetVol, 0.5);
+                } else {
+                    this.setMusicVolume(0, 0.5);
+                }
+            }
+        }
+        
+        const audio = new AudioController();
+
+        // Game Constants and Initialization
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const TILE_SIZE = 30; 
+        const GRID_SIZE = canvas.width / TILE_SIZE; 
+        let gameLoopInterval;
+        
+        let snake = [];
+        let food = {};
+        
+        let bonusFood = null;
+        let bonusFoodTimer = 0; 
+        let bonusFoodSpawnCooldown = 0; 
+        let bonusFoodTotalSpawns = 0; 
+        const BONUS_DURATION = 60; 
+        const BONUS_POINTS = 50;
+        
+        let dx = TILE_SIZE;
+        let dy = 0;
+        let score = 0;
+        let currentLevel = 1;
+        let changingDirection = false;
+        let isPaused = false; 
+        let highScore = localStorage.getItem('snakeHighScore') || 0; 
+        let currentSnakeColor = {}; 
+        let currentFoodColor = '';
+        let currentBonusFoodColor = '';
+        let currentObstacleStrokeColor = '';
+        let currentSnakeOutlineColor = ''; 
+        let currentSnakeShape = 'square'; 
+        let obstacles = [];
+        let selectedSpeed = 180;
+        let currentBackgroundPattern; 
+        let currentIntervalTime = selectedSpeed;
+        
+        let currentSnakeSizeScale = 1.0; 
+        
+        // Theme Data
+        const THEMES = [
+            { name: 'Twilight Ascent', class: 'theme-twilight' }, 
+            { name: 'Deep Forest', class: 'theme-forest' },
+            { name: 'High Seas', class: 'theme-seas' },       
+            { name: 'Vampire Night', class: 'theme-vampire' }, 
+            { name: 'Solar Flare', class: 'theme-solar' },     
+            { name: 'Monochrome', class: 'theme-mono' },       
+        ];
+        let currentThemeClass = 'theme-twilight'; 
+        
+        // Shape Data
+        const SNAKE_SHAPES = [
+            { id: 'square', name: 'Square' },
+            { id: 'circle', name: 'Circle' },
+            { id: 'rounded', name: 'Rounded' },
+            { id: 'diamond', name: 'Diamond' },
+            { id: 'ring', name: 'Ring' },
+            { id: 'star', name: 'Star' }
+        ];
+
+        // Level Data
+        const TOTAL_LEVELS = 10; 
+        const LEVEL_GOALS = {
+            1: { target: Infinity, mode: 'Classic Free-Roam', walls: false, description: "Infinite Walls-Off score attack. Speed is constant." },
+            2: { target: 100, mode: 'Corner Pillars', walls: false, description: "Walls OFF. Simple blocks in the corners. Target: 100." },
+            3: { target: 150, mode: 'The Gates', walls: false, description: "Walls OFF. Navigate through the vertical gaps. Target: 150." },
+            4: { target: 200, mode: 'The Plus', walls: false, description: "Walls OFF. A perfectly symmetrical central Plus (+) sign. Don't get stuck! Target: 200." },
+            5: { target: 250, mode: 'The X-Factor', walls: false, description: "Walls OFF. A large X spans the map. Target: 250." },
+            6: { target: 300, mode: 'Basic Box', walls: true, description: "Walls ON! Simple border. Don't hit the edge. Target: 300." },
+            7: { target: 350, mode: 'The Columns', walls: true, description: "Walls ON. Four large pillars force you to weave. Target: 350." },
+            8: { target: 400, mode: 'The Grid', walls: true, description: "Walls ON. A symmetrical grid of pillars and dividers creating tight passages. Target: 400." },
+            9: { target: 500, mode: 'The H-Maze', walls: true, description: "Walls ON. A massive H shape creates two distinct zones. Target: 500." },
+            10: { target: 600, mode: 'The Spiral', walls: true, description: "Walls ON. A dangerous spiral cage. There is only one way out. Target: 600." }
+        };
+        
+        const SPEED_OPTIONS = [
+            { label: "SLOW", value: 180 },
+            { label: "NORMAL", value: 120 },
+            { label: "FAST", value: 80 },
+            { label: "INSANE", value: 50 }
+        ];
+
+        const COLOR_OPTIONS = [
+             { hex: '#FF0000', name: 'RED' }, { hex: '#FFA500', name: 'ORANGE' },
+             { hex: '#FFFF00', name: 'YELLOW' }, { hex: '#008000', name: 'GREEN' },
+             { hex: '#0000FF', name: 'BLUE' }, { hex: '#4B0082', name: 'INDIGO' },
+             { hex: '#EE82EE', name: 'VIOLET' }, { hex: '#FFC0CB', name: 'PINK' },
+             { hex: '#800000', name: 'MAROON' }, { hex: '#808000', name: 'OLIVE' },
+             { hex: '#008080', name: 'TEAL' }, { hex: '#000080', name: 'NAVY' },
+             { hex: '#FFFFFF', name: 'WHITE' }, { hex: '#C0C0C0', name: 'SILVER' },
+             { hex: '#808080', name: 'GRAY' }, { hex: '#000000', name: 'BLACK' }
+        ];
+        
+        const SNAKE_SKINS = [
+            { head: '#FF0000', body: '#B20000', name: 'RED' }, { head: '#FFA500', body: '#B27300', name: 'ORANGE' }, 
+            { head: '#FFFF00', body: '#B2B200', name: 'YELLOW' }, { head: '#008000', body: '#006400', name: 'GREEN' },
+            { head: '#0000FF', body: '#0000B2', name: 'BLUE' }, { head: '#4B0082', body: '#34005C', name: 'INDIGO' }, 
+            { head: '#EE82EE', body: '#A75BA7', name: 'VIOLET' }, { head: '#FFC0CB', body: '#B2878F', name: 'PINK' },
+            { head: '#800000', body: '#5C0000', name: 'MAROON' }, { head: '#808000', body: '#5C5C00', name: 'OLIVE' }, 
+            { head: '#008080', body: '#005C5C', name: 'TEAL' }, { head: '#000080', body: '#00005C', name: 'NAVY' },
+            { head: '#FFFFFF', body: '#B2B2B2', name: 'WHITE' }, { head: '#C0C0C0', body: '#878787', name: 'SILVER' },  
+            { head: '#808080', body: '#5C5C5C', name: 'GRAY' }, { head: '#000000', body: '#333333', name: 'BLACK' } 
+        ];
+
+
+        function loadCustomizations() {
+            const savedThemeClass = localStorage.getItem('snakeThemeClass');
+            const defaultThemeClass = 'theme-twilight'; 
+            currentThemeClass = THEMES.some(t => t.class === savedThemeClass) ? savedThemeClass : defaultThemeClass;
+            
+            const defaultSkin = SNAKE_SKINS.find(s => s.name === 'GREEN'); 
+            const defaultFoodColor = COLOR_OPTIONS.find(c => c.name === 'RED').hex;
+            const defaultBonusColor = COLOR_OPTIONS.find(c => c.name === 'YELLOW').hex;
+            const defaultObstacleStrokeColor = COLOR_OPTIONS.find(c => c.name === 'BLUE').hex;
+            const defaultOutlineColor = COLOR_OPTIONS.find(c => c.name === 'WHITE').hex;
+            
+            currentSnakeColor = SNAKE_SKINS.find(s => s.name === (localStorage.getItem('snakeSkinName') || defaultSkin.name)) || defaultSkin;
+            currentFoodColor = localStorage.getItem('foodColor') || defaultFoodColor; 
+            currentBonusFoodColor = localStorage.getItem('bonusColor') || defaultBonusColor;
+            currentObstacleStrokeColor = localStorage.getItem('obstacleStrokeColor') || defaultObstacleStrokeColor; 
+            currentSnakeOutlineColor = localStorage.getItem('snakeOutlineColor') || defaultOutlineColor; 
+            currentSnakeShape = localStorage.getItem('snakeShape') || 'square';
+            
+            currentSnakeSizeScale = parseFloat(localStorage.getItem('snakeSizeScale')) || 1.0; 
+            currentSnakeSizeScale = Math.max(0.5, Math.min(1.2, currentSnakeSizeScale));
+            
+            document.documentElement.style.setProperty('--custom-food-color', currentFoodColor);
+            document.documentElement.style.setProperty('--custom-bonus-color', currentBonusFoodColor);
+            document.documentElement.style.setProperty('--custom-obstacle-stroke', currentObstacleStrokeColor);
+            document.documentElement.style.setProperty('--custom-snake-outline', currentSnakeOutlineColor);
+            document.documentElement.style.setProperty('--snake-head-color', currentSnakeColor.head);
+            document.documentElement.style.setProperty('--snake-body-color', currentSnakeColor.body);
+            
+            selectedSpeed = parseInt(localStorage.getItem('selectedSpeed')) || 180;
+        }
+        loadCustomizations(); 
+
+        
+        function applyTheme(themeClass) {
+            currentThemeClass = themeClass; 
+            const body = document.body;
+            const container = document.getElementById('game-container');
+            
+            const allThemeClasses = THEMES.map(t => t.class).filter(c => c);
+            body.classList.remove(...allThemeClasses); 
+            container.classList.remove(...allThemeClasses);
+            
+            if (themeClass) {
+                body.classList.add(themeClass);
+                container.classList.add(themeClass);
+            }
+            
+            localStorage.setItem('snakeThemeClass', themeClass); 
+            loadCustomizations(); 
+            
+            if (document.getElementById('game-play').classList.contains('active') && !isPaused) {
+                currentBackgroundPattern = createLevelPattern(currentLevel, ctx); 
+                drawGame(); 
+            }
+             
+            if (document.getElementById('main-menu').classList.contains('active')) {
+                clearInterval(menuSnakeInterval);
+                startMenuSnakeAnimation();
+            }
+            
+            if (document.getElementById('level-select-menu').classList.contains('active')) {
+                 updateLevelSelectUI(); 
+            }
+            
+            if (document.getElementById('customization-menu').classList.contains('active')) {
+                updateThemeSelectUI(); 
+                updateSnakeColorSelectUI(); 
+            }
+        }
+        
+        function initGame(levelToStart) {
+             currentLevel = levelToStart;
+             dx = TILE_SIZE; dy = 0; score = 0; changingDirection = false; 
+             isPaused = false; 
+             
+             bonusFood = null;
+             bonusFoodTimer = 0;
+             bonusFoodTotalSpawns = 0;
+             bonusFoodSpawnCooldown = 30;
+             
+             document.getElementById('pause-screen').style.display = 'none';
+
+             obstacles = generateObstacles(currentLevel); 
+             initSnake(); 
+             
+             currentBackgroundPattern = createLevelPattern(currentLevel, ctx); 
+             updateGameInfo(); 
+             createFood(); 
+             
+             showScreen('game-play');
+
+             currentIntervalTime = selectedSpeed; 
+             if (gameLoopInterval) clearInterval(gameLoopInterval);
+             
+             drawGame(); 
+             gameLoopInterval = setInterval(main, currentIntervalTime); 
+             
+             audio.setMusicVolume(audio.soundsOn ? 0.15 : 0); 
+        }
+
+
+        function moveSnake() {
+            let headX = snake[0].x + dx;
+            let headY = snake[0].y + dy;
+            
+            if (!LEVEL_GOALS[currentLevel].walls) {
+                if (headX < 0) headX = canvas.width - TILE_SIZE;
+                else if (headX >= canvas.width) headX = 0;
+                
+                if (headY < 0) headY = canvas.height - TILE_SIZE;
+                else if (headY >= canvas.height) headY = 0;
+            }
+            
+            const head = { x: headX, y: headY };
+            snake.unshift(head);
+            
+            let eaten = false;
+            
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                audio.playEatFx(); 
+                updateGameInfo();
+                createFood(); 
+                eaten = true;
+            } 
+            
+            if (bonusFood && head.x === bonusFood.x && head.y === bonusFood.y) {
+                score += BONUS_POINTS;
+                audio.playBonusFx();
+                bonusFood = null; 
+                updateGameInfo();
+                eaten = true;
+            }
+            
+            if (!eaten) {
+                snake.pop(); 
+            }
+            
+            const levelGoal = LEVEL_GOALS[currentLevel].target;
+            if (levelGoal !== Infinity && score >= levelGoal) {
+                gameComplete();
+            }
+        }
+        
+        function gameOver() {
+            clearInterval(gameLoopInterval);
+            audio.playGameOverFx(); 
+            
+            if (currentLevel === 1 && score > highScore) {
+                highScore = score;
+                localStorage.setItem('snakeHighScore', highScore);
+            }
+            
+            document.getElementById('level-complete-message').innerHTML = `
+                <p style="color: var(--secondary); font-weight: bold;">Mission Failed.</p>
+                <p>Goal: ${LEVEL_GOALS[currentLevel].target !== Infinity ? LEVEL_GOALS[currentLevel].target + ' points.' : 'N/A'}</p>
+            `;
+
+            document.getElementById('final-score').textContent = `Final Score: ${score}`;
+            document.getElementById('restart-button').textContent = `RETRY LEVEL ${currentLevel}`;
+            document.getElementById('restart-button').onclick = () => {
+                audio.playMenuClickFx();
+                initGame(currentLevel);
+            };
+
+            showScreen('game-over-screen');
+        }
+
+        function togglePause() {
+            audio.initAudio(); 
+            audio.playMenuClickFx(); 
+            if (isPaused) {
+                isPaused = false;
+                document.getElementById('pause-screen').style.display = 'none';
+                audio.setMusicVolume(audio.soundsOn ? 0.15 : 0); 
+                if (gameLoopInterval) clearInterval(gameLoopInterval); 
+                gameLoopInterval = setInterval(main, currentIntervalTime); 
+                updateGameInfo(); 
+            } else {
+                isPaused = true;
+                clearInterval(gameLoopInterval);
+                audio.setMusicVolume(0);
+                document.getElementById('pause-screen').style.display = 'flex';
+                updateGameInfo(); 
+            }
+        }
+
+        function drawBackground(drawingContext, drawingCanvas, level) {
+            const tempCtx = drawingContext || ctx;
+            const tempCanvas = drawingCanvas || canvas;
+            
+            const canvasBaseColor = getComputedStyle(document.body).getPropertyValue('--canvas-base').trim() || '#302b45';
+            tempCtx.fillStyle = canvasBaseColor; 
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            if (drawingContext === ctx && currentBackgroundPattern) {
+                tempCtx.fillStyle = currentBackgroundPattern; 
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            } else if (drawingContext) {
+                 const pattern = createLevelPattern(level, tempCtx);
+                 if (pattern) {
+                     tempCtx.fillStyle = pattern; 
+                     tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                 }
+            }
+        }
+
+        function drawObstacles(drawingContext, level, tile_size) {
+            const tempCtx = drawingContext || ctx;
+            const tempObstacles = drawingContext && drawingContext !== ctx ? generateObstacles(level) : obstacles; 
+
+            if (tempObstacles.length === 0) return;
+            
+            const TILE_SIZE_OBS = tile_size || TILE_SIZE;
+            const obstacleColor = getComputedStyle(document.body).getPropertyValue('--bg-dark').trim() || '#1f1a30';
+            const shadowColor = getComputedStyle(document.body).getPropertyValue('--secondary').trim() || '#ff4081';
+            const strokeColor = getComputedStyle(document.body).getPropertyValue('--custom-obstacle-stroke').trim() || '#ff6e40';
+            
+            tempObstacles.forEach(obs => {
+                const x = obs.x * (TILE_SIZE_OBS / TILE_SIZE);
+                const y = obs.y * (TILE_SIZE_OBS / TILE_SIZE);
+                
+                tempCtx.fillStyle = obstacleColor; 
+                tempCtx.shadowBlur = 4; 
+                tempCtx.shadowColor = shadowColor + 'aa'; 
+                tempCtx.fillRect(x, y, TILE_SIZE_OBS, TILE_SIZE_OBS);
+                tempCtx.shadowBlur = 0; 
+
+                tempCtx.strokeStyle = strokeColor; 
+                tempCtx.lineWidth = 1; 
+                tempCtx.strokeRect(x, y, TILE_SIZE_OBS, TILE_SIZE_OBS);
+            });
+            tempCtx.shadowBlur = 0;
+        }
+        
+        function drawFood() {
+            const x = food.x;
+            const y = food.y;
+            
+            const foodColor = getComputedStyle(document.body).getPropertyValue('--custom-food-color').trim() || '#ff6e40';
+            const outlineColor = getComputedStyle(document.body).getPropertyValue('--custom-snake-outline').trim() || '#b08dff';
+            
+            ctx.fillStyle = foodColor; 
+            
+            const time = new Date().getTime() / 1000;
+            const pulse = Math.sin(time * 5) * 5 + 15; 
+            
+            ctx.shadowBlur = pulse;
+            ctx.shadowColor = foodColor;
+            
+            ctx.strokeStyle = outlineColor; 
+            ctx.lineWidth = 3; 
+
+            ctx.beginPath();
+            ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE / 2 * 0.8, 0, Math.PI * 2); 
+            ctx.fill();
+            ctx.stroke(); 
+            
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'var(--text-light)';
+            ctx.beginPath();
+            ctx.arc(x + TILE_SIZE / 2 + TILE_SIZE * 0.18, y + TILE_SIZE / 2 - TILE_SIZE * 0.18, TILE_SIZE / 2 * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawBonusFood() {
+            if (!bonusFood) return;
+            
+            const x = bonusFood.x;
+            const y = bonusFood.y;
+            const cx = x + TILE_SIZE / 2;
+            const cy = y + TILE_SIZE / 2;
+            
+            const bonusColor = getComputedStyle(document.body).getPropertyValue('--custom-bonus-color').trim() || '#FFFF00';
+
+            ctx.fillStyle = bonusColor; 
+            ctx.shadowColor = bonusColor;
+            ctx.shadowBlur = 15;
+            
+            const time = new Date().getTime() / 200;
+            const scale = 1 + Math.sin(time) * 0.2;
+            
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(scale, scale);
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, TILE_SIZE / 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(-5, -5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+            ctx.shadowBlur = 0;
+            
+            const barWidth = TILE_SIZE;
+            const barHeight = 4;
+            const pct = bonusFoodTimer / BONUS_DURATION;
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x, y - 8, barWidth, barHeight);
+            
+            ctx.fillStyle = pct > 0.3 ? '#00FF00' : '#FF0000';
+            ctx.fillRect(x, y - 8, barWidth * pct, barHeight);
+        }
+
+        function drawSnakeSegment(segment, index) {
+            const x = segment.x;
+            const y = segment.y;
+            const HEAD_COLOR = currentSnakeColor.head;
+            const BODY_COLOR = currentSnakeColor.body;
+            const OUTLINE_COLOR = getComputedStyle(document.body).getPropertyValue('--custom-snake-outline').trim() || '#b08dff'; 
+            const DARK_COLOR = getComputedStyle(document.body).getPropertyValue('--snake-eye-color').trim() || '#1f1a30';
+            const shape = currentSnakeShape;
+            
+            const scale = currentSnakeSizeScale;
+            const scaledSize = TILE_SIZE * scale;
+            const offset = (TILE_SIZE - scaledSize) / 2; 
+            
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = index === 0 ? HEAD_COLOR : BODY_COLOR;
+            ctx.strokeStyle = OUTLINE_COLOR;
+            ctx.lineWidth = 3 * scale; 
+
+            ctx.beginPath();
+            const cx = x + TILE_SIZE / 2;
+            const cy = y + TILE_SIZE / 2;
+            const r = TILE_SIZE / 2 * scale; 
+            const padding = 2 * scale; 
+            
+            switch (shape) {
+                case 'circle':
+                    ctx.arc(cx, cy, r - padding, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (index !== 0) ctx.stroke();
+                    break;
+                case 'rounded':
+                    ctx.roundRect(x + offset + padding, y + offset + padding, scaledSize - padding*2, scaledSize - padding*2, 8 * scale);
+                    ctx.fill();
+                    if (index !== 0) ctx.stroke();
+                    break;
+                case 'diamond':
+                    ctx.moveTo(cx, y + offset + padding);
+                    ctx.lineTo(x + TILE_SIZE - offset - padding, cy);
+                    ctx.lineTo(cx, y + TILE_SIZE - offset - padding);
+                    ctx.lineTo(x + offset + padding, cy);
+                    ctx.closePath();
+                    ctx.fill();
+                    if (index !== 0) ctx.stroke();
+                    break;
+                case 'ring':
+                    ctx.lineWidth = 4 * scale;
+                    ctx.strokeStyle = index === 0 ? HEAD_COLOR : BODY_COLOR;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r - 5 * scale, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.fillStyle = OUTLINE_COLOR;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r - 10 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                 case 'star':
+                    const spikes = 5;
+                    const outerRadius = r - padding;
+                    const innerRadius = (r - padding) / 2;
+                    let rot = Math.PI / 2 * 3;
+                    let x_star = cx;
+                    let y_star = cy;
+                    let step = Math.PI / spikes;
+
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - outerRadius);
+                    for (let i = 0; i < spikes; i++) {
+                        x_star = cx + Math.cos(rot) * outerRadius;
+                        y_star = cy + Math.sin(rot) * outerRadius;
+                        ctx.lineTo(x_star, y_star);
+                        rot += step;
+
+                        x_star = cx + Math.cos(rot) * innerRadius;
+                        y_star = cy + Math.sin(rot) * innerRadius;
+                        ctx.lineTo(x_star, y_star);
+                        rot += step;
+                    }
+                    ctx.lineTo(cx, cy - outerRadius);
+                    ctx.closePath();
+                    ctx.fill();
+                    if (index !== 0) {
+                         ctx.strokeStyle = OUTLINE_COLOR;
+                         ctx.lineWidth = 1 * scale;
+                         ctx.stroke();
+                    }
+                    break;
+                case 'square':
+                default:
+                    ctx.fillRect(x + offset, y + offset, scaledSize, scaledSize);
+                    if (index !== 0) {
+                        ctx.strokeRect(x + offset + 1, y + offset + 1, scaledSize - 2, scaledSize - 2);
+                    }
+                    break;
+            }
+
+            // Draw Eyes (Head Only)
+            if (index === 0) {
+                ctx.fillStyle = DARK_COLOR; 
+                const eyeOffset = scaledSize * 0.25;
+                const eyeSize = scaledSize * 0.15;
+                
+                let eyeYOffset = offset + eyeOffset; 
+                if (shape === 'diamond') eyeYOffset = offset + eyeOffset * 1.5; 
+
+                ctx.beginPath();
+                ctx.arc(x + offset + eyeOffset, y + eyeYOffset, eyeSize, 0, Math.PI * 2);
+                ctx.arc(x + TILE_SIZE - offset - eyeOffset, y + eyeYOffset, eyeSize, 0, Math.PI * 2); 
+                ctx.fill();
+                
+                ctx.fillStyle = OUTLINE_COLOR; 
+                const pupilSize = scaledSize * 0.08;
+                
+                if (dx !== 0) {
+                    let pX = dx > 0 ? TILE_SIZE - offset - eyeOffset : offset + eyeOffset; 
+                    let pYTop = y + eyeYOffset;
+                    let pYBottom = y + TILE_SIZE - offset - eyeOffset; 
+
+                    ctx.fillRect(x + pX - pupilSize / 2, pYTop - pupilSize / 2, pupilSize, pupilSize);
+                    ctx.fillRect(x + pX - pupilSize / 2, pYBottom - pupilSize / 2, pupilSize, pupilSize);
+                } else { 
+                    let pY = dy > 0 ? TILE_SIZE - offset - eyeOffset : offset + eyeOffset; 
+                    let pXLeft = x + offset + eyeOffset;
+                    let pXRight = x + TILE_SIZE - offset - eyeOffset; 
+
+                    ctx.fillRect(pXLeft - pupilSize / 2, y + pY - pupilSize / 2, pupilSize, pupilSize);
+                    ctx.fillRect(pXRight - pupilSize / 2, y + pY - pupilSize / 2, pupilSize, pupilSize);
+                }
+            } 
+        }
+
+        function isBlockClear(centerX, centerY, size, obstacles) {
+            const halfSize = Math.floor(size / 2); 
+            const MIN_CLEARANCE = halfSize + 1; 
+
+            const centerTileX = centerX / TILE_SIZE;
+            const centerTileY = centerY / TILE_SIZE;
+
+            for (let i = centerTileX - halfSize; i <= centerTileX + halfSize; i++) {
+                for (let j = centerTileY - halfSize; j <= centerTileY + halfSize; j++) {
+                    
+                    if (i < 0 || i >= GRID_SIZE || j < 0 || j >= GRID_SIZE) {
+                        return false; 
+                    }
+                    
+                    if (LEVEL_GOALS[currentLevel].walls) {
+                        if (i < MIN_CLEARANCE || i >= GRID_SIZE - MIN_CLEARANCE ||
+                            j < MIN_CLEARANCE || j >= GRID_SIZE - MIN_CLEARANCE) {
+                            return false;
+                        }
+                    }
+
+                    if (obstacles.some(obs => obs.x === i * TILE_SIZE && obs.y === j * TILE_SIZE)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function initSnake() {
+            const currentObs = generateObstacles(currentLevel); 
+            const CLEARANCE_AREA_SIZE = 5; 
+            const MIN_EDGE_DISTANCE = Math.floor(CLEARANCE_AREA_SIZE / 2); 
+            const MAX_ATTEMPTS = 100;
+
+            let startX, startY;
+            let safeSpawnFound = false;
+            let spawnAttempt = 0;
+            
+            const searchRange = GRID_SIZE - MIN_EDGE_DISTANCE * 2; 
+            
+            const directions = [
+                { dx: TILE_SIZE, dy: 0 }, { dx: -TILE_SIZE, dy: 0 },
+                { dx: 0, dy: TILE_SIZE }, { dx: 0, dy: -TILE_SIZE }
+            ];
+            
+            let proposedSnake = [];
+
+            while (spawnAttempt < MAX_ATTEMPTS && !safeSpawnFound) {
+                 const randomTileX = Math.floor(Math.random() * searchRange) + MIN_EDGE_DISTANCE;
+                 const randomTileY = Math.floor(Math.random() * searchRange) + MIN_EDGE_DISTANCE;
+                 
+                 startX = randomTileX * TILE_SIZE;
+                 startY = randomTileY * TILE_SIZE;
+
+                 if (isBlockClear(startX, startY, CLEARANCE_AREA_SIZE, currentObs)) { 
+                    
+                    directions.sort(() => Math.random() - 0.5); 
+                    
+                    for (const dir of directions) {
+                        let seg1, seg2;
+                        
+                        let oppDirX = -dir.dx / TILE_SIZE;
+                        let oppDirY = -dir.dy / TILE_SIZE;
+
+                        seg1 = { x: startX + oppDirX * TILE_SIZE, y: startY + oppDirY * TILE_SIZE };
+                        seg2 = { x: startX + 2 * oppDirX * TILE_SIZE, y: startY + 2 * oppDirY * TILE_SIZE };
+                        
+                        proposedSnake = [{ x: startX, y: startY }, seg1, seg2];
+                        dx = dir.dx;
+                        dy = dir.dy;
+                        safeSpawnFound = true;
+                        break; 
+                    }
+                 }
+                 spawnAttempt++;
+            }
+
+            if (!safeSpawnFound) {
+                 startX = 3 * TILE_SIZE;
+                 startY = 3 * TILE_SIZE;
+                 dx = TILE_SIZE;
+                 dy = 0;
+                 proposedSnake = [
+                    { x: startX, y: startY },
+                    { x: startX - TILE_SIZE, y: startY },
+                    { x: startX - 2 * TILE_SIZE, y: startY },
+                 ];
+                 
+                 proposedSnake.forEach(seg => {
+                      const index = currentObs.findIndex(obs => obs.x === seg.x && obs.y === seg.y);
+                      if (index !== -1) {
+                         currentObs.splice(index, 1);
+                      }
+                 });
+                 
+            }
+            snake = proposedSnake;
+            changingDirection = false; 
+        }
+
+        function createFood() {
+            let newFood;
+            const bonusObs = bonusFood ? [bonusFood] : [];
+            const exclusionList = snake.concat(obstacles).concat(bonusObs); 
+
+            do {
+                newFood = {
+                    x: Math.floor(Math.random() * GRID_SIZE) * TILE_SIZE,
+                    y: Math.floor(Math.random() * GRID_SIZE) * TILE_SIZE,
+                };
+            } while (exclusionList.some(item => item.x === newFood.x && item.y === newFood.y));
+            
+            food = newFood;
+        }
+        
+        function spawnBonusFood() {
+            if (bonusFoodTotalSpawns >= 3) return; 
+
+            let newBonus;
+            const exclusionList = snake.concat(obstacles).concat([food]);
+            
+            let safe = false;
+            let attempts = 50;
+            
+            while (!safe && attempts > 0) {
+                 newBonus = {
+                    x: Math.floor(Math.random() * GRID_SIZE) * TILE_SIZE,
+                    y: Math.floor(Math.random() * GRID_SIZE) * TILE_SIZE,
+                };
+                safe = !exclusionList.some(item => item.x === newBonus.x && item.y === newBonus.y);
+                attempts--;
+            }
+            
+            if (safe) {
+                bonusFood = newBonus;
+                bonusFoodTimer = BONUS_DURATION;
+                bonusFoodTotalSpawns++;
+            }
+        }
+
+        function generateObstacles(level) {
+            const obs = [];
+            const center = Math.floor(GRID_SIZE / 2); 
+            
+            const addBlock = (x, y) => {
+                if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+                    obs.push({ x: x * TILE_SIZE, y: y * TILE_SIZE });
+                }
+            };
+            
+            const addLine = (startX, endX, startY, endY) => {
+                for (let x = startX; x <= endX; x++) {
+                    for (let y = startY; y <= endY; y++) {
+                        addBlock(x, y);
+                    }
+                }
+            };
+            
+            const addObstacleBorder = () => {
+                addLine(0, GRID_SIZE - 1, 0, 0); 
+                addLine(0, GRID_SIZE - 1, GRID_SIZE - 1, GRID_SIZE - 1); 
+                addLine(0, 0, 1, GRID_SIZE - 2); 
+                addLine(GRID_SIZE - 1, GRID_SIZE - 1, 1, GRID_SIZE - 2); 
+            };
+
+
+            if (level === 1) return obs;
+            
+            if (level === 2) {
+                addLine(2, 3, 2, 3);
+                addLine(GRID_SIZE - 4, GRID_SIZE - 3, 2, 3);
+                addLine(2, 3, GRID_SIZE - 4, GRID_SIZE - 3);
+                addLine(GRID_SIZE - 4, GRID_SIZE - 3, GRID_SIZE - 4, GRID_SIZE - 3);
+            }
+            
+            if (level === 3) {
+                const leftX = Math.floor(GRID_SIZE / 3); 
+                const rightX = Math.floor(GRID_SIZE * 2 / 3); 
+                addLine(leftX, leftX, 2, center - 2);
+                addLine(leftX, leftX, center + 2, GRID_SIZE - 3);
+                addLine(rightX, rightX, 2, center - 2);
+                addLine(rightX, rightX, center + 2, GRID_SIZE - 3);
+            }
+            
+            if (level === 4) {
+                const C1 = center - 1; 
+                const C2 = center;     
+                const START = 4;
+                const END = GRID_SIZE - 5; 
+                
+                addLine(C1, C2, START, END);
+                addLine(START, END, C1, C2);
+            }
+
+            if (level === 5) {
+                for(let i = 3; i < GRID_SIZE - 3; i++) {
+                    addBlock(i, i);
+                    addBlock(i, (GRID_SIZE - 1) - i);
+                }
+            }
+            
+            if (level >= 6) {
+                 addObstacleBorder();
+            }
+            
+            if (level === 7) { 
+                 const q1 = Math.floor(GRID_SIZE * 0.25); 
+                 const q3 = Math.floor(GRID_SIZE * 0.75); 
+                 
+                 addLine(q1, q1, q1, q1+2); 
+                 addLine(q3, q3, q1, q1+2); 
+                 addLine(q1, q1, q3-2, q3); 
+                 addLine(q3, q3, q3-2, q3); 
+            }
+            
+            if (level === 8) { 
+                 const X1 = 4;
+                 const X2 = 5;
+                 const Y1 = 4;
+                 const Y2 = 5;
+                 
+                 const X3 = GRID_SIZE - 6; 
+                 const X4 = GRID_SIZE - 5; 
+                 const Y3 = GRID_SIZE - 6; 
+                 const Y4 = GRID_SIZE - 5; 
+
+                 addLine(X1, X2, Y1, Y2);
+                 addLine(X3, X4, Y1, Y2);
+                 addLine(X1, X2, Y3, Y4);
+                 addLine(X3, X4, Y3, Y4);
+                 
+                 addLine(center-1, center, 6, GRID_SIZE-7); 
+            }
+
+            if (level === 9) {
+                 const col = 5;
+                 addLine(col, col, 4, GRID_SIZE - 5); 
+                 addLine(GRID_SIZE - col - 1, GRID_SIZE - col - 1, 4, GRID_SIZE - 5); 
+                 addLine(col, GRID_SIZE - col - 1, center, center); 
+            }
+            
+            if (level === 10) {
+                 addLine(3, GRID_SIZE - 4, 3, 3);
+                 addLine(GRID_SIZE - 4, GRID_SIZE - 4, 3, GRID_SIZE - 4);
+                 addLine(6, GRID_SIZE - 4, GRID_SIZE - 4, GRID_SIZE - 4);
+                 addLine(6, 6, 6, GRID_SIZE - 4);
+                 addLine(6, GRID_SIZE - 7, 6, 6);
+                 addLine(GRID_SIZE - 7, GRID_SIZE - 7, 6, GRID_SIZE - 7);
+            }
+
+            return obs;
+        }
+        
+        function createLevelPattern(level, targetCtx) {
+            const patternCanvas = document.createElement('canvas');
+            patternCanvas.width = TILE_SIZE * 2;
+            patternCanvas.height = TILE_SIZE * 2;
+            const pctx = patternCanvas.getContext('2d');
+            
+            const contextForPattern = targetCtx || ctx;
+            if (!contextForPattern || typeof contextForPattern.createPattern !== 'function') return null; 
+            
+            const themeElement = document.body;
+            const canvasBaseColor = getComputedStyle(themeElement).getPropertyValue('--canvas-base').trim() || '#302b45';
+            const highlightColor = getComputedStyle(themeElement).getPropertyValue('--highlight').trim();
+
+            pctx.fillStyle = canvasBaseColor;
+            pctx.fillRect(0, 0, patternCanvas.width, patternCanvas.height);
+            
+            pctx.fillStyle = highlightColor + '2A'; 
+            pctx.strokeStyle = highlightColor + '2A';
+            pctx.lineWidth = 1;
+
+            switch(level) {
+                case 1: 
+                    pctx.beginPath(); pctx.moveTo(0,0); pctx.lineTo(patternCanvas.width, patternCanvas.height); pctx.stroke();
+                    break;
+                case 2: 
+                    pctx.beginPath(); pctx.arc(TILE_SIZE, TILE_SIZE, 2, 0, Math.PI*2); pctx.fill();
+                    break;
+                case 3: 
+                    pctx.beginPath(); 
+                    pctx.moveTo(TILE_SIZE, 5); pctx.lineTo(TILE_SIZE, patternCanvas.height-5);
+                    pctx.moveTo(5, TILE_SIZE); pctx.lineTo(patternCanvas.width-5, TILE_SIZE);
+                    pctx.stroke();
+                    break;
+                case 4: 
+                    pctx.beginPath(); pctx.moveTo(0, TILE_SIZE); pctx.lineTo(patternCanvas.width, TILE_SIZE); pctx.stroke();
+                    break;
+                case 5: 
+                    pctx.beginPath(); pctx.moveTo(TILE_SIZE, 0); pctx.lineTo(TILE_SIZE, patternCanvas.height); pctx.stroke();
+                    break;
+                case 6: 
+                    pctx.beginPath(); 
+                    pctx.moveTo(0,0); pctx.lineTo(patternCanvas.width, patternCanvas.height);
+                    pctx.moveTo(patternCanvas.width, 0); pctx.lineTo(0, patternCanvas.height);
+                    pctx.stroke();
+                    break;
+                case 7: 
+                    pctx.strokeRect(TILE_SIZE/2, TILE_SIZE/2, TILE_SIZE, TILE_SIZE);
+                    break;
+                case 8: 
+                    pctx.fillRect(0,0, TILE_SIZE, TILE_SIZE);
+                    pctx.fillRect(TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    break;
+                case 9: 
+                    pctx.beginPath();
+                    pctx.moveTo(0, TILE_SIZE); pctx.lineTo(TILE_SIZE, 0); pctx.lineTo(patternCanvas.width, TILE_SIZE);
+                    pctx.fill();
+                    break;
+                case 10: 
+                    pctx.beginPath();
+                    pctx.moveTo(0, patternCanvas.height); pctx.lineTo(TILE_SIZE, 0); pctx.lineTo(patternCanvas.width, patternCanvas.height);
+                    pctx.fill();
+                    break;
+                default: 
+                    pctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+            }
+            
+            return contextForPattern.createPattern(patternCanvas, 'repeat');
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            let hitWall = false;
+            let hitObstacle = false;
+
+            if (LEVEL_GOALS[currentLevel].walls) {
+                hitWall = (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height);
+            }
+            
+            if (currentLevel > 1) {
+                hitObstacle = obstacles.some(obs => obs.x === head.x && obs.y === head.y);
+            }
+            
+            const hitSelf = snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y);
+            
+            if (hitWall || hitObstacle) {
+                audio.playWallHitFx(); 
+            }
+
+            return hitWall || hitSelf || hitObstacle;
+        }
+
+        function gameComplete() {
+            clearInterval(gameLoopInterval);
+            audio.playMenuClickFx(); 
+            const nextLevel = currentLevel + 1;
+            
+            document.getElementById('level-complete-title').textContent = `LEVEL ${currentLevel} CLEARED!`;
+            document.getElementById('level-complete-score').textContent = `Final Score: ${score}`;
+            
+            const continueButton = document.getElementById('continue-level-button');
+            if (nextLevel <= TOTAL_LEVELS) {
+                continueButton.textContent = `CONTINUE TO LEVEL ${nextLevel}`;
+                continueButton.onclick = () => {
+                    audio.playMenuClickFx();
+                    initGame(nextLevel);
+                };
+            } else {
+                continueButton.textContent = `ALL LEVELS CLEARED! REPLAY CLASSIC`;
+                 continueButton.onclick = () => {
+                    audio.playMenuClickFx();
+                    initGame(1);
+                };
+            }
+            
+            showScreen('level-complete-screen');
+        }
+
+        function updateGameInfo() {
+            const mode = LEVEL_GOALS[currentLevel].mode;
+            document.getElementById('score-display').textContent = `SCORE: ${score}`;
+            
+            let displayMode = mode.split('(')[0].trim();
+            if (displayMode === 'Classic Free-Roam') displayMode = 'Classic';
+
+            document.getElementById('level-display').textContent = `LVL: ${currentLevel}`;
+            
+            const target = LEVEL_GOALS[currentLevel].target;
+            const targetDisplay = document.getElementById('target-display');
+            if (target !== Infinity) {
+                targetDisplay.textContent = `GOAL: ${target}`;
+                targetDisplay.style.color = score >= target ? 'var(--primary)' : 'var(--secondary)';
+            } else {
+                targetDisplay.textContent = `∞`;
+                targetDisplay.style.color = 'var(--highlight)';
+            }
+            
+            const pauseBtn = document.getElementById('pause-toggle-button');
+            pauseBtn.textContent = isPaused ? '▶' : 'II';
+            pauseBtn.style.backgroundColor = isPaused ? 'var(--primary)' : 'var(--secondary)';
+        }
+        
+        function main() {
+            if (isPaused) return;
+            
+            if (!bonusFood) {
+                if (bonusFoodTotalSpawns < 3) { 
+                    bonusFoodSpawnCooldown++;
+                    if (bonusFoodSpawnCooldown > 150) { 
+                        if (Math.random() < 0.01) {
+                            spawnBonusFood();
+                            bonusFoodSpawnCooldown = 0; 
+                        }
+                    }
+                }
+            } else {
+                bonusFoodTimer--;
+                if (bonusFoodTimer <= 0) {
+                    bonusFood = null; 
+                }
+            }
+            
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            moveSnake();
+            drawGame();
+        }
+
+        function drawGame() {
+            drawBackground(ctx, canvas, currentLevel);
+            drawObstacles(ctx, currentLevel, TILE_SIZE); 
+            drawFood();
+            drawBonusFood();
+            snake.forEach(drawSnakeSegment);
+            changingDirection = false; 
+        }
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        function handleTouchStart(event) {
+            audio.initAudio(); 
+            if (isPaused || changingDirection) return;
+            const touch = event.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        }
+
+        function handleTouchEnd(event) {
+            if (isPaused) return;
+            const touch = event.changedTouches[0];
+            const endX = touch.clientX;
+            const endY = touch.clientY;
+            const dx_touch = endX - touchStartX;
+            const dy_touch = endY - touchStartY;
+            const threshold = 15; 
+
+            if (Math.abs(dx_touch) > Math.abs(dy_touch)) {
+                if (Math.abs(dx_touch) > threshold) {
+                    let new_dx = dx_touch > 0 ? TILE_SIZE : -TILE_SIZE;
+                    let new_dy = 0;
+                    const goingOppositeX = new_dx === -dx && new_dx !== 0;
+                    if (!goingOppositeX) {
+                        changingDirection = true;
+                        dx = new_dx;
+                        dy = new_dy;
+                    }
+                }
+            } else {
+                if (Math.abs(dy_touch) > threshold) {
+                    let new_dx = 0;
+                    let new_dy = dy_touch > 0 ? TILE_SIZE : -TILE_SIZE;
+                    const goingOppositeY = new_dy === -dy && new_dy !== 0;
+                    if (!goingOppositeY) {
+                        changingDirection = true;
+                        dx = new_dx;
+                        dy = new_dy;
+                    }
+                }
+            }
+        }
+        
+        // UI/Menu Logic
+        
+        const menuCanvas = document.getElementById('menu-canvas');
+        const menuCtx = menuCanvas.getContext('2d');
+        const MENU_TILE_SIZE = 15;
+        let menuSnakeInterval;
+        let menuSnakes = [];
+
+        function initMenuSnakes() {
+            menuCanvas.width = menuCanvas.offsetWidth;
+            menuCanvas.height = menuCanvas.offsetHeight;
+            
+            menuSnakes = [];
+            const numSnakes = 3;
+            
+            for (let i = 0; i < numSnakes; i++) {
+                const startX = Math.floor(Math.random() * (menuCanvas.width / MENU_TILE_SIZE)) * MENU_TILE_SIZE;
+                const startY = Math.floor(Math.random() * (menuCanvas.height / MENU_TILE_SIZE)) * MENU_TILE_SIZE;
+                
+                menuSnakes.push({
+                    body: [{ x: startX, y: startY }, { x: startX, y: startY + MENU_TILE_SIZE }],
+                    dx: 0,
+                    dy: -MENU_TILE_SIZE,
+                    moveCounter: 0,
+                    turnChance: 0.1, 
+                });
+            }
+        }
+
+        function moveMenuSnakes() {
+            menuCtx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
+            
+            menuSnakes.forEach(snake => {
+                snake.moveCounter++;
+                if (snake.moveCounter % 5 === 0 && Math.random() < snake.turnChance) {
+                    const directions = [
+                        { dx: MENU_TILE_SIZE, dy: 0 }, { dx: -MENU_TILE_SIZE, dy: 0 },
+                        { dx: 0, dy: MENU_TILE_SIZE }, { dx: 0, dy: -MENU_TILE_SIZE }
+                    ];
+                    let newDir;
+                    do {
+                        newDir = directions[Math.floor(Math.random() * directions.length)];
+                    } while ((newDir.dx === -snake.dx && newDir.dx !== 0) || (newDir.dy === -snake.dy && newDir.dy !== 0));
+                    snake.dx = newDir.dx;
+                    snake.dy = newDir.dy;
+                }
+
+                let headX = snake.body[0].x + snake.dx;
+                let headY = snake.body[0].y + snake.dy;
+                if (headX < 0) headX = menuCanvas.width - MENU_TILE_SIZE;
+                else if (headX >= menuCanvas.width) headX = 0;
+                if (headY < 0) headY = menuCanvas.height - MENU_TILE_SIZE;
+                else if (headY >= menuCanvas.height) headY = 0;
+                
+                snake.body.unshift({ x: headX, y: headY });
+                if (snake.body.length > 5) snake.body.pop();
+
+                snake.body.forEach((segment, index) => {
+                    menuCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--bg-dark').trim();
+                    if (index === 0) {
+                        menuCtx.fillStyle = getComputedStyle(document.body).getPropertyValue('--snake-head-color').trim();
+                    } else {
+                        menuCtx.fillStyle = getComputedStyle(document.body).getPropertyValue('--snake-body-color').trim();
+                    }
+                    menuCtx.fillRect(segment.x, segment.y, MENU_TILE_SIZE, MENU_TILE_SIZE);
+                    menuCtx.lineWidth = 1;
+                    menuCtx.strokeRect(segment.x + 0.5, segment.y + 0.5, MENU_TILE_SIZE - 1, MENU_TILE_SIZE - 1);
+                });
+            });
+        }
+        
+        function startMenuSnakeAnimation() {
+            initMenuSnakes();
+            menuSnakeInterval = setInterval(moveMenuSnakes, 150); 
+        }
+
+        function stopMenuSnakeAnimation() {
+            if (menuSnakeInterval) {
+                clearInterval(menuSnakeInterval);
+                menuSnakeInterval = null;
+            }
+        }
+
+
+        function updateThemeSelectUI() {
+            const grid = document.getElementById('theme-selection');
+            grid.innerHTML = '';
+            THEMES.forEach(theme => {
+                const tile = document.createElement('div');
+                tile.className = `theme-tile ${theme.class === currentThemeClass ? 'selected' : ''}`; 
+                tile.textContent = theme.name;
+                tile.dataset.class = theme.class;
+                tile.addEventListener('click', function() {
+                    audio.playMenuClickFx(); 
+                    document.querySelectorAll('.theme-tile').forEach(t => t.classList.remove('selected'));
+                    this.classList.add('selected'); 
+                    applyTheme(this.dataset.class);
+                });
+                grid.appendChild(tile);
+            });
+        }
+
+        function updateLevelDescription(level) {
+             if (level < 1 || level > TOTAL_LEVELS) level = 1;
+             const levelData = LEVEL_GOALS[level];
+             document.getElementById('level-number-display').textContent = level;
+             document.getElementById('level-name-display').textContent = levelData.mode;
+             const wallText = levelData.walls ? 'Walls ON (Hit kills)' : 'Walls OFF (Wrap Around)';
+             document.getElementById('level-mode-display').textContent = `MODE: ${levelData.mode} (${wallText})`;
+             document.getElementById('level-goal-display').textContent = levelData.target !== Infinity ? `GOAL: ${levelData.target} Points` : `GOAL: Infinite Survival`;
+             document.getElementById('level-desc-display').textContent = levelData.description;
+             drawLevelMapPreview(level);
+        }
+        
+        function drawLevelMapPreview(level) {
+             const previewContainer = document.getElementById('level-visualization-area');
+             let previewCanvas = document.getElementById('level-map-preview');
+             const PREVIEW_SIZE = 120; 
+             const PREVIEW_TILE_SIZE = PREVIEW_SIZE / GRID_SIZE; 
+
+             if (!previewCanvas) {
+                 previewCanvas = document.createElement('canvas');
+                 previewCanvas.id = 'level-map-preview';
+                 previewCanvas.width = PREVIEW_SIZE;
+                 previewCanvas.height = PREVIEW_SIZE;
+                 previewContainer.appendChild(previewCanvas);
+             }
+             const pCtx = previewCanvas.getContext('2d');
+             drawBackground(pCtx, previewCanvas, level);
+             if (LEVEL_GOALS[level].walls) {
+                  const wallColor = getComputedStyle(document.body).getPropertyValue('--secondary').trim() || '#ff4081';
+                  pCtx.strokeStyle = wallColor;
+                  pCtx.lineWidth = 3;
+                  pCtx.strokeRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+             }
+             drawObstacles(pCtx, level, PREVIEW_TILE_SIZE);
+        }
+
+        function updateStartButton(level) {
+            const startButton = document.getElementById('start-selected-level');
+            const currentData = LEVEL_GOALS[level];
+            let wallStatus = currentData.walls ? 'Walls ON' : 'Walls OFF';
+            let btnText = `START LEVEL ${level} (${wallStatus})`;
+            
+            if (currentData.target !== Infinity) {
+                btnText += ` - Goal: ${currentData.target}`;
+            }
+            startButton.textContent = btnText;
+            startButton.onclick = () => {
+                audio.playMenuClickFx();
+                initGame(level); 
+            };
+        }
+        
+        let currentSelectedLevel = parseInt(localStorage.getItem('selectedLevel')) || 1;
+
+        function cycleLevel(direction) {
+             audio.playMenuClickFx();
+             let newLevel = currentSelectedLevel + direction;
+             if (newLevel < 1) newLevel = TOTAL_LEVELS;
+             if (newLevel > TOTAL_LEVELS) newLevel = 1;
+             currentSelectedLevel = newLevel;
+             localStorage.setItem('selectedLevel', currentSelectedLevel);
+             updateLevelDescription(currentSelectedLevel);
+             updateStartButton(currentSelectedLevel);
+        }
+
+        function updateLevelSelectUI() {
+            currentSelectedLevel = parseInt(localStorage.getItem('selectedLevel')) || 1;
+            if (currentSelectedLevel < 1 || currentSelectedLevel > TOTAL_LEVELS) currentSelectedLevel = 1;
+            updateLevelDescription(currentSelectedLevel);
+            updateStartButton(currentSelectedLevel);
+            updateSpeedSelectUI(); 
+            document.getElementById('prev-level-button').onclick = () => cycleLevel(-1);
+            document.getElementById('next-level-button').onclick = () => cycleLevel(1);
+        }
+        
+        function updateSpeedSelectUI() {
+            const group = document.getElementById('speed-select-group');
+            group.innerHTML = '';
+            selectedSpeed = parseInt(localStorage.getItem('selectedSpeed')) || 180;
+            SPEED_OPTIONS.forEach(option => {
+                const btn = document.createElement('button');
+                btn.textContent = option.label;
+                btn.dataset.value = option.value;
+                btn.classList.add('speed-button');
+                if (option.value === selectedSpeed) {
+                    btn.classList.add('selected');
+                }
+                btn.addEventListener('click', function() {
+                    audio.playMenuClickFx(); 
+                    document.querySelectorAll('.speed-button').forEach(b => {
+                        if (b.closest('#speed-select-group')) { 
+                            b.classList.remove('selected');
+                        }
+                    });
+                    this.classList.add('selected');
+                    selectedSpeed = parseInt(this.dataset.value);
+                    localStorage.setItem('selectedSpeed', selectedSpeed);
+                });
+                group.appendChild(btn);
+            });
+        }
+        
+        function updateSnakeSizeSlider() {
+            const slider = document.getElementById('snake-size-slider');
+            const label = document.getElementById('size-label');
+            
+            slider.value = currentSnakeSizeScale;
+            label.textContent = `Size: ${(currentSnakeSizeScale * 100).toFixed(0)}%`;
+
+            slider.addEventListener('input', function() {
+                const newScale = parseFloat(this.value);
+                currentSnakeSizeScale = newScale;
+                localStorage.setItem('snakeSizeScale', newScale.toFixed(2));
+                label.textContent = `Size: ${(newScale * 100).toFixed(0)}%`;
+            });
+        }
+
+        function updateSnakeColorSelectUI() {
+            const grid = document.getElementById('snake-color-selection');
+            grid.innerHTML = '';
+            const currentSkin = SNAKE_SKINS.find(s => s.head === currentSnakeColor.head && s.body === currentSnakeColor.body) || SNAKE_SKINS[3];
+            let selectedSkinName = currentSkin.name;
+
+            SNAKE_SKINS.forEach(colorData => {
+                const item = document.createElement('div');
+                item.className = `color-item ${colorData.name === selectedSkinName ? 'selected' : ''}`;
+                item.dataset.colorName = colorData.name;
+                const tile = document.createElement('div');
+                tile.className = 'color-option';
+                tile.style.backgroundColor = colorData.head;
+                
+                if (colorData.head.toUpperCase() === '#FFFFFF') {
+                     tile.style.borderColor = '#000000';
+                     if (colorData.name === selectedSkinName) {
+                        tile.style.borderColor = 'var(--secondary)';
+                     }
+                }
+                
+                const name = document.createElement('div');
+                name.className = 'color-name';
+                name.textContent = colorData.name;
+                item.appendChild(tile);
+                item.appendChild(name);
+                item.addEventListener('click', function() {
+                    audio.playMenuClickFx(); 
+                    document.querySelectorAll('#snake-color-selection .color-item').forEach(t => t.classList.remove('selected'));
+                    this.classList.add('selected');
+                    currentSnakeColor = SNAKE_SKINS.find(s => s.name === this.dataset.colorName);
+                    localStorage.setItem('snakeSkinName', currentSnakeColor.name);
+                    
+                    document.documentElement.style.setProperty('--snake-head-color', currentSnakeColor.head);
+                    document.documentElement.style.setProperty('--snake-body-color', currentSnakeColor.body);
+                });
+                grid.appendChild(item);
+            });
+        }
+        
+        function createColorSelectGrid(containerId, storageKey, getCurrentColor, cssVarName, colorList) {
+             const grid = document.getElementById(containerId);
+             grid.innerHTML = '';
+             let selectedColor = getComputedStyle(document.body).getPropertyValue(cssVarName).trim() || getCurrentColor();
+
+             colorList.forEach(colorData => {
+                 const item = document.createElement('div');
+                 item.className = `color-item ${colorData.hex.toUpperCase() === selectedColor.toUpperCase() ? 'selected' : ''}`; 
+                 item.dataset.hex = colorData.hex;
+                 const tile = document.createElement('div');
+                 tile.className = 'color-option';
+                 tile.style.backgroundColor = colorData.hex;
+                 
+                 if (colorData.hex.toUpperCase() === '#FFFFFF') {
+                      tile.style.borderColor = '#000000';
+                      if (colorData.hex.toUpperCase() === selectedColor.toUpperCase()) {
+                         tile.style.borderColor = 'var(--secondary)';
+                      }
+                 }
+                 
+                 const name = document.createElement('div');
+                 name.className = 'color-name';
+                 name.textContent = colorData.name;
+                 item.appendChild(tile);
+                 item.appendChild(name);
+
+                 item.addEventListener('click', function() {
+                     audio.playMenuClickFx(); 
+                     document.querySelectorAll(`#${containerId} .color-item`).forEach(t => t.classList.remove('selected'));
+                     this.classList.add('selected');
+                     const newColor = this.dataset.hex;
+                     localStorage.setItem(storageKey, newColor);
+                     document.documentElement.style.setProperty(cssVarName, newColor);
+                     
+                     if (storageKey === 'foodColor') currentFoodColor = newColor;
+                     if (storageKey === 'bonusColor') currentBonusFoodColor = newColor; 
+                     if (storageKey === 'obstacleStrokeColor') currentObstacleStrokeColor = newColor;
+                     if (storageKey === 'snakeOutlineColor') currentSnakeOutlineColor = newColor; 
+                 });
+                 grid.appendChild(item);
+             });
+         }
+         
+        function updateShapeSelectUI() {
+            const group = document.getElementById('shape-select-group');
+            group.innerHTML = '';
+            
+            SNAKE_SHAPES.forEach(shape => {
+                const btn = document.createElement('div');
+                btn.className = `shape-button ${shape.id === currentSnakeShape ? 'selected' : ''}`;
+                
+                const icon = document.createElement('div');
+                icon.className = `shape-icon icon-${shape.id}`;
+                
+                const label = document.createElement('span');
+                label.textContent = shape.name;
+                
+                btn.appendChild(icon);
+                btn.appendChild(label);
+                
+                btn.addEventListener('click', function() {
+                    audio.playMenuClickFx();
+                    document.querySelectorAll('.shape-button').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    currentSnakeShape = shape.id;
+                    localStorage.setItem('snakeShape', currentSnakeShape);
+                });
+                
+                group.appendChild(btn);
+            });
+        }
+
+
+        function updateCustomizationUIs() {
+             loadCustomizations(); 
+             applyTheme(currentThemeClass); 
+             updateThemeSelectUI(); 
+             updateSnakeColorSelectUI(); 
+             updateShapeSelectUI(); 
+             
+             updateSnakeSizeSlider();
+             
+             createColorSelectGrid('snake-outline-selection', 'snakeOutlineColor', () => currentSnakeOutlineColor, '--custom-snake-outline', COLOR_OPTIONS);
+             createColorSelectGrid('food-color-selection', 'foodColor', () => currentFoodColor, '--custom-food-color', COLOR_OPTIONS);
+             createColorSelectGrid('bonus-color-selection', 'bonusColor', () => currentBonusFoodColor, '--custom-bonus-color', COLOR_OPTIONS); 
+             createColorSelectGrid('obstacle-stroke-selection', 'obstacleStrokeColor', () => currentObstacleStrokeColor, '--custom-obstacle-stroke', COLOR_OPTIONS);
+         }
+
+
+        function showScreen(id) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                if(screen.id !== id) {
+                    screen.classList.remove('active');
+                }
+            });
+            document.getElementById(id).classList.add('active');
+            
+            const infoButton = document.getElementById('info-button');
+            infoButton.style.display = id === 'main-menu' ? 'flex' : 'none';
+
+            audio.initAudio(); 
+            
+            if (id === 'main-menu') {
+                document.getElementById('high-score-display').textContent = `CLASSIC HIGH SCORE: ${highScore}`;
+                audio.setMusicVolume(audio.soundsOn ? 0.3 : 0); 
+                startMenuSnakeAnimation(); 
+            } else {
+                 stopMenuSnakeAnimation(); 
+                 if (id === 'game-play') {
+                 } else {
+                    audio.setMusicVolume(0);
+                 }
+            }
+            if (id === 'customization-menu') updateCustomizationUIs(); 
+            if (id === 'level-select-menu') updateLevelSelectUI(); 
+        }
+
+        function setupEventListeners() {
+            document.getElementById('level-select-button').onclick = () => { audio.playMenuClickFx(); showScreen('level-select-menu'); };
+            document.getElementById('customization-button').onclick = () => { audio.playMenuClickFx(); showScreen('customization-menu'); };
+            document.getElementById('back-to-main-from-level').onclick = () => { audio.playMenuClickFx(); showScreen('main-menu'); clearInterval(gameLoopInterval); };
+            document.getElementById('back-to-main-from-custom').onclick = () => { audio.playMenuClickFx(); showScreen('main-menu'); };
+            document.getElementById('resume-button').onclick = () => togglePause();
+            document.getElementById('pause-toggle-button').onclick = togglePause; 
+            document.getElementById('toggle-music').onclick = () => { audio.playMenuClickFx(); audio.toggleMusic(); }; 
+            document.getElementById('main-menu-from-pause').onclick = () => { audio.playMenuClickFx(); clearInterval(gameLoopInterval); showScreen('main-menu'); isPaused = false; };
+            document.getElementById('main-menu-button-go').onclick = () => { audio.playMenuClickFx(); showScreen('main-menu'); };
+            document.getElementById('main-menu-button-lc').onclick = () => { audio.playMenuClickFx(); showScreen('main-menu'); };
+            
+            document.getElementById('info-button').onclick = () => { audio.playMenuClickFx(); document.getElementById('info-modal').style.display = 'flex'; };
+            document.getElementById('close-info-modal').onclick = () => { audio.playMenuClickFx(); document.getElementById('info-modal').style.display = 'none'; };
+
+            
+            const directionMap = {
+                37: { dx: -TILE_SIZE, dy: 0 }, 38: { dx: 0, dy: -TILE_SIZE }, 39: { dx: TILE_SIZE, dy: 0 }, 40: { dx: 0, dy: TILE_SIZE },  
+                65: { dx: -TILE_SIZE, dy: 0 }, 87: { dx: 0, dy: -TILE_SIZE }, 68: { dx: TILE_SIZE, dy: 0 }, 83: { dx: 0, dy: TILE_SIZE }, 
+            };
+
+            document.addEventListener('keydown', (event) => {
+                audio.initAudio(); 
+                const newDir = directionMap[event.keyCode];
+                
+                if (event.key === "Escape") {
+                    if (document.getElementById('info-modal').style.display === 'flex') {
+                        document.getElementById('info-modal').style.display = 'none';
+                        return;
+                    }
+                    if (document.getElementById('customization-menu').classList.contains('active') || 
+                        document.getElementById('level-select-menu').classList.contains('active') ||
+                        document.getElementById('game-over-screen').classList.contains('active') ||
+                        document.getElementById('level-complete-screen').classList.contains('active')) {
+                        showScreen('main-menu');
+                        return;
+                    }
+                    if (document.getElementById('game-play').classList.contains('active')) {
+                        togglePause();
+                        return;
+                    }
+                }
+                
+                if (event.keyCode === 80 && document.getElementById('game-play').classList.contains('active')) {
+                    togglePause();
+                    return;
+                }
+                
+                if (newDir && !changingDirection && !isPaused) {
+                    const goingOppositeX = newDir.dx === -dx && newDir.dx !== 0;
+                    const goingOppositeY = newDir.dy === -dy && newDir.dy !== 0;
+                    if (!goingOppositeX && !goingOppositeY) {
+                        changingDirection = true;
+                        dx = newDir.dx;
+                        dy = newDir.dy;
+                    }
+                }
+            });
+            
+            canvas.addEventListener('touchstart', handleTouchStart, false);
+            canvas.addEventListener('touchend', handleTouchEnd, false);
+            
+            window.addEventListener('resize', () => {
+                if (document.getElementById('main-menu').classList.contains('active')) {
+                    stopMenuSnakeAnimation();
+                    startMenuSnakeAnimation();
+                }
+                if (document.getElementById('level-select-menu').classList.contains('active')) {
+                     drawLevelMapPreview(currentSelectedLevel); 
+                }
+            });
+        }
+
+        applyTheme(currentThemeClass); 
+        setupEventListeners();
+        showScreen('main-menu');
+        
+        audio.updateMusicButtonUI();
+    </script>
+</body>
+</html>

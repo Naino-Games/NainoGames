@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe V1 - Ultimate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- CSS VARIABLES & CORE --- */
+        :root {
+            /* Default: Obsidian Theme */
+            --bg-color: #050505;
+            --bg-image: none; /* For textures */
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-color: #ffffff;
+            --primary: #00ff88;
+            --secondary: #ff0055;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --font-main: 'Montserrat', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background-color 0.6s ease, color 0.3s ease;
+        }
+
+        /* --- LAYOUT --- */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        button { font-family: var(--font-main); outline: none; }
+
+        /* --- SCREENS --- */
+        .screen {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* --- MENU --- */
+        h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 5px; text-align: center; text-transform: uppercase; letter-spacing: -1px; line-height: 1; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h1 span { color: var(--primary); }
+        .subtitle { font-size: 0.8rem; letter-spacing: 4px; opacity: 0.9; margin-bottom: 40px; text-transform: uppercase; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+
+        .menu-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: #ffffff; /* Always White Text for Menu Buttons for contrast */
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 8px 0;
+            width: 85%;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .menu-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        /* --- BOTTOM CONTROLS --- */
+        .bottom-controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+        .icon-btn {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .icon-btn:hover { background: var(--primary); color: #000; transform: rotate(15deg); }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); /* Darker overlay for better contrast */
+            backdrop-filter: blur(12px);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; z-index: 100;
+            transition: 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal-card {
+            background: #151515; /* Hardcoded dark background for readability */
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform: translateY(20px);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .modal-overlay.open .modal-card { transform: translateY(0); }
+        
+        .close-modal {
+            position: absolute; top: 15px; right: 15px;
+            background: transparent; border: none; color: #fff;
+            font-size: 1.5rem; cursor: pointer; opacity: 0.5;
+        }
+        .close-modal:hover { opacity: 1; }
+
+        /* --- RESULT BUTTONS (FIXED VISIBILITY) --- */
+        .btn-primary {
+            background: var(--primary); 
+            color: #000; 
+            border: none;
+            width: 100%;
+        }
+        /* The specific fix for the 'Main Menu' button to ensure visibility */
+        .btn-secondary {
+            background: transparent !important;
+            border: 2px solid rgba(255,255,255,0.3) !important;
+            color: #fff !important;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-secondary:hover {
+            border-color: #fff !important;
+            background: rgba(255,255,255,0.1) !important;
+        }
+
+        /* --- THEME GRID (5x4) --- */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .theme-swatch {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .theme-swatch:hover { transform: scale(1.15); z-index: 2; border-color: #fff; }
+        .theme-swatch.active { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        .theme-swatch.active::after {
+            content: '\f00c'; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff; font-size: 1rem; text-shadow: 0 0 5px #000;
+        }
+
+        /* --- GRID SIZE --- */
+        .size-options { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .size-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; padding: 15px 0; width: 100%;
+            border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .size-btn:hover { background: var(--primary); color: #000; }
+
+        /* --- GAME BOARD --- */
+        .game-header {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; margin-bottom: 20px;
+            background: rgba(0,0,0,0.4); /* Contrast box for header */
+            padding: 10px; border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+        .score-pill {
+            padding: 5px 12px; border-radius: 50px;
+            font-size: 0.9rem; font-weight: 700; border: 1px solid transparent;
+            display: flex; align-items: center; gap: 8px; color: #fff;
+        }
+        .score-pill.active { border-color: var(--primary); background: rgba(255,255,255,0.1); }
+
+        .board-container {
+            width: 100%; aspect-ratio: 1;
+            display: grid; gap: 8px;
+            margin: 0 auto 20px auto;
+        }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+        .cell {
+            background: rgba(20, 20, 20, 0.6); /* Semi-transparent dark */
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; font-weight: 900;
+            cursor: pointer;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        .cell:hover:not(.taken) { background: rgba(255,255,255,0.15); }
+        
+        .cell.x { color: var(--primary); text-shadow: 0 0 20px var(--primary); }
+        .cell.o { color: var(--secondary); text-shadow: 0 0 20px var(--secondary); }
+        .cell.win { background: #fff; color: #000; animation: pop 0.3s ease; }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* --- INFO CARD --- */
+        .info-content img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; border: 3px solid var(--primary); }
+        .credits { font-size: 0.9rem; margin-bottom: 20px; line-height: 1.6; opacity: 0.8; }
+        .yt-btn {
+            background: #FF0000; color: #fff; padding: 12px 25px;
+            border-radius: 50px; text-decoration: none; font-weight: bold;
+            display: inline-flex; align-items: center; gap: 10px;
+            transition: 0.3s; border: none;
+            box-shadow: 0 5px 15px rgba(255,0,0,0.3);
+        }
+        .yt-btn:hover { background: #cc0000; transform: scale(1.05); }
+
+        @media (max-width: 400px) {
+            h1 { font-size: 2.2rem; }
+            .board-container { gap: 5px; }
+            .cell { border-radius: 8px; font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div id="screen-menu" class="screen active">
+            <h1>TIC <span>TAC</span> TOE</h1>
+            <div class="subtitle">Version 1.0</div>
+            
+            <button class="menu-btn" onclick="UI.openGridSelect('pvp')">
+                <i class="fa-solid fa-user-group"></i> Local PVP
+            </button>
+            <button class="menu-btn" onclick="UI.openGridSelect('ai_easy')">
+                <i class="fa-solid fa-robot"></i> Easy AI
+            </button>
+            <button class="menu-btn" onclick="UI.openGridSelect('ai_hard')">
+                <i class="fa-solid fa-brain"></i> Pro AI
+            </button>
+
+            <div class="bottom-controls">
+                <button class="icon-btn" onclick="UI.toggleSound()" id="btn-sound"><i class="fa-solid fa-volume-high"></i></button>
+                <button class="icon-btn" onclick="UI.openModal('modal-themes')"><i class="fa-solid fa-palette"></i></button>
+                <button class="icon-btn" onclick="UI.openModal('modal-info')"><i class="fa-solid fa-circle-info"></i></button>
+            </div>
+        </div>
+
+        <div id="screen-game" class="screen">
+            <div class="game-header">
+                <button class="icon-btn" style="width: 40px; height: 40px;" onclick="Game.exit()"><i class="fa-solid fa-arrow-left"></i></button>
+                <div style="display: flex; gap: 10px;">
+                    <div id="score-p1" class="score-pill"><i class="fa-solid fa-x"></i> <span id="s-p1">0</span></div>
+                    <div id="score-p2" class="score-pill"><i class="fa-solid fa-o"></i> <span id="s-p2">0</span></div>
+                </div>
+                <button class="icon-btn" style="width: 40px; height: 40px;" onclick="Game.restart()"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+
+            <div id="game-board" class="board-container grid-3"></div>
+            <div style="text-align: center; font-size: 0.9rem; font-weight:700; text-shadow: 0 2px 4px rgba(0,0,0,0.8);" id="status-msg">Player X's Turn</div>
+        </div>
+
+    </div>
+
+    <div id="modal-grid" class="modal-overlay">
+        <div class="modal-card">
+            <button class="close-modal" onclick="UI.closeModal('modal-grid')">&times;</button>
+            <h2>Select Grid Size</h2>
+            <p style="margin: 10px 0 20px; opacity: 0.7;">Larger grids require 4 in a row.</p>
+            <div class="size-options">
+                <button class="size-btn" onclick="Game.start(3)">3 x 3</button>
+                <button class="size-btn" onclick="Game.start(4)">4 x 4</button>
+                <button class="size-btn" onclick="Game.start(5)">5 x 5</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-themes" class="modal-overlay">
+        <div class="modal-card">
+            <button class="close-modal" onclick="UI.closeModal('modal-themes')">&times;</button>
+            <h2>Customize</h2>
+            <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 10px;">15 Colors & 5 Textures</p>
+            <div class="theme-grid" id="theme-container"></div>
+        </div>
+    </div>
+
+    <div id="modal-info" class="modal-overlay">
+        <div class="modal-card info-content">
+            <button class="close-modal" onclick="UI.closeModal('modal-info')">&times;</button>
+            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;">
+                <i class="fa-solid fa-gamepad"></i>
+            </div>
+            <h2>Tic Tac Toe V1</h2>
+            <div class="credits">
+                Designed & Developed by<br>
+                <strong>Nawab Husnain</strong>
+            </div>
+            <a href="https://youtube.com/@buntyzz" target="_blank" class="yt-btn">
+                <i class="fa-brands fa-youtube"></i> Subscribe to BuntyZZ
+            </a>
+        </div>
+    </div>
+
+    <div id="modal-result" class="modal-overlay">
+        <div class="modal-card">
+            <h2 id="winner-text" style="font-size: 2rem; margin-bottom: 20px;">Player X Wins!</h2>
+            <button class="menu-btn btn-primary" onclick="Game.restart(); UI.closeModal('modal-result')">Play Again</button>
+            <button class="menu-btn btn-secondary" onclick="Game.exit(); UI.closeModal('modal-result')">Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- 1. DATA & THEMES --- */
+        // Colors & Professional generated textures (CSS Gradients)
+        const Themes = [
+            // Row 1: Dark Solids
+            { id: 0, bg: '#000000', img: 'none', pri: '#00ff88', sec: '#ff0055' }, // Obsidian
+            { id: 1, bg: '#121212', img: 'none', pri: '#ffae00', sec: '#00aeff' }, // Amber
+            { id: 2, bg: '#1a1a2e', img: 'none', pri: '#e94560', sec: '#0f3460' }, // Midnight
+            { id: 3, bg: '#192a56', img: 'none', pri: '#fbc531', sec: '#e84118' }, // Deep Navy
+            { id: 4, bg: '#2d3436', img: 'none', pri: '#a29bfe', sec: '#ff7675' }, // Concrete
+
+            // Row 2: Gradients
+            { id: 5, bg: 'linear-gradient(45deg, #1cb5e0 0%, #000851 100%)', img: 'linear-gradient(45deg, #1cb5e0 0%, #000851 100%)', pri: '#00eaff', sec: '#ff007b' }, // Oceanic
+            { id: 6, bg: 'linear-gradient(to right, #434343 0%, black 100%)', img: 'linear-gradient(to right, #434343 0%, black 100%)', pri: '#fff', sec: '#999' }, // Carbon
+            { id: 7, bg: 'linear-gradient(120deg, #f093fb 0%, #f5576c 100%)', img: 'linear-gradient(120deg, #f093fb 0%, #f5576c 100%)', pri: '#ffeaa7', sec: '#81ecec' }, // Sunset
+            { id: 8, bg: 'linear-gradient(to top, #09203f 0%, #537895 100%)', img: 'linear-gradient(to top, #09203f 0%, #537895 100%)', pri: '#00d2d3', sec: '#ff9f43' }, // Mineral
+            { id: 9, bg: '#2f0054', img: 'radial-gradient(circle, rgba(100,0,150,0.5) 0%, rgba(20,0,50,1) 100%)', pri: '#d63031', sec: '#fdcb6e' }, // Royal
+
+            // Row 3: Neon & Tech
+            { id: 10, bg: '#000000', img: 'repeating-linear-gradient(0deg, transparent, transparent 1px, #0f0 1px, #0f0 2px)', pri: '#00ff00', sec: '#ffffff' }, // Matrix
+            { id: 11, bg: '#050505', img: 'linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222), linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222)', pri: '#ff00de', sec: '#00ffff' }, // Cyber Grid
+            { id: 12, bg: '#2c3e50', img: 'none', pri: '#e67e22', sec: '#f1c40f' }, // Slate
+            { id: 13, bg: '#485460', img: 'none', pri: '#0fb9b1', sec: '#fa8231' }, // Pewter
+            { id: 14, bg: '#3d3d3d', img: 'none', pri: '#7d5fff', sec: '#ff3838' }, // Dark Grey
+
+            // Row 4: Professional Textures
+            { 
+                id: 15, // Wood
+                bg: '#5e4026', 
+                img: 'repeating-linear-gradient(45deg, #6b4423, #6b4423 10px, #523318 10px, #523318 20px)', 
+                pri: '#e1b12c', sec: '#c23616' 
+            }, 
+            { 
+                id: 16, // Sea
+                bg: '#006266', 
+                img: 'radial-gradient(circle at 50% 50%, #4facfe, #00f2fe)', 
+                pri: '#a8e6cf', sec: '#ff8b94' 
+            }, 
+            { 
+                id: 17, // Forest
+                bg: '#1b4d3e', 
+                img: 'repeating-radial-gradient(circle, #2d6a4f, #2d6a4f 5px, #1b4332 5px, #1b4332 15px)', 
+                pri: '#95d5b2', sec: '#ffb7b2' 
+            }, 
+            { 
+                id: 18, // Desert
+                bg: '#d35400', 
+                img: 'linear-gradient(135deg, #e67e22 25%, #d35400 25%, #d35400 50%, #e67e22 50%, #e67e22 75%, #d35400 75%, #d35400 100%)', 
+                pri: '#2c3e50', sec: '#ecf0f1' 
+            },
+            { 
+                id: 19, // Galaxy
+                bg: '#000', 
+                img: 'radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px), radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px), radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px)', 
+                pri: '#d980fa', sec: '#12cbc4' 
+            }
+        ];
+
+        /* --- 2. AUDIO SYSTEM --- */
+        const AudioSys = {
+            ctx: null, on: true,
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play(t, f, d, v=0.1) {
+                if(!this.on) return;
+                this.init();
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
+                g.gain.setValueAtTime(v, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + d);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + d);
+            },
+            click() { this.play('sine', 800, 0.05, 0.05); },
+            move() { this.play('triangle', 300, 0.1); },
+            win() { if(!this.on)return; [400,500,600,800].forEach((f,i)=>setTimeout(()=>this.play('square', f, 0.2, 0.1), i*100)); }
+        };
+
+        /* --- 3. GAME LOGIC --- */
+        const Game = {
+            board: [], size: 3, winLen: 3, turn: 'X', active: false, mode: 'pvp', pendingMode: 'pvp', scores: {X:0, O:0},
+            
+            init() { UI.renderThemes(); },
+
+            openSelector(m) { this.pendingMode = m; UI.openModal('modal-grid'); },
+            
+            start(n) {
+                this.size = n; this.winLen = (n===3)?3:4;
+                this.mode = this.pendingMode; this.scores = {X:0,O:0};
+                UI.updateScores(); UI.closeModal('modal-grid'); UI.switchScreen('screen-game');
+                this.restart();
+            },
+
+            restart() {
+                this.board = Array(this.size*this.size).fill(null);
+                this.turn = 'X'; this.active = true;
+                UI.buildBoard(this.size); UI.updateStatus();
+            },
+
+            exit() { UI.switchScreen('screen-menu'); },
+
+            clickCell(i) {
+                if(!this.active || this.board[i]) return;
+                this.executeMove(i, this.turn);
+                if(this.active && this.mode !== 'pvp' && this.turn === 'O') {
+                    this.active = false;
+                    setTimeout(() => { this.executeMove(AI.move(), 'O'); this.active = true; }, 500);
+                }
+            },
+
+            executeMove(i, p) {
+                this.board[i] = p; UI.mark(i, p); AudioSys.move();
+                const win = this.checkWin(this.board, p);
+                if(win) {
+                    this.active = false; this.scores[p]++; UI.updateScores(); UI.highlight(win); AudioSys.win();
+                    setTimeout(() => UI.result(p), 1000);
+                } else if(!this.board.includes(null)) {
+                    this.active = false; setTimeout(() => UI.result('draw'), 500);
+                } else {
+                    this.turn = (this.turn==='X')?'O':'X'; UI.updateStatus();
+                }
+            },
+
+            checkWin(b, p) {
+                const n = this.size, w = this.winLen;
+                const check = (s, step) => {
+                    let r = []; for(let i=0;i<w;i++) { if(b[s+i*step]!==p) return null; r.push(s+i*step); }
+                    return r;
+                };
+                for(let r=0; r<n; r++) {
+                    for(let c=0; c<n; c++) {
+                        const i = r*n+c;
+                        if(c<=n-w) { let l=check(i,1); if(l) return l; }
+                        if(r<=n-w) { let l=check(i,n); if(l) return l; }
+                        if(r<=n-w && c<=n-w) { let l=check(i,n+1); if(l) return l; }
+                        if(r<=n-w && c>=w-1) { let l=check(i,n-1); if(l) return l; }
+                    }
+                }
+                return null;
+            }
+        };
+
+        const AI = {
+            move() {
+                if(Game.size===3 && Game.mode==='ai_hard') return this.minimax(Game.board, 'O').i;
+                const e = Game.board.map((v,i)=>v?null:i).filter(v=>v!==null);
+                // Heuristics for larger boards
+                for(let i of e) { Game.board[i]='O'; if(Game.checkWin(Game.board,'O')){ Game.board[i]=null; return i; } Game.board[i]=null; }
+                for(let i of e) { Game.board[i]='X'; if(Game.checkWin(Game.board,'X')){ Game.board[i]=null; return i; } Game.board[i]=null; }
+                if(Game.board[Math.floor(Game.board.length/2)]===null) return Math.floor(Game.board.length/2);
+                return e[Math.floor(Math.random()*e.length)];
+            },
+            minimax(b, p) {
+                const e = b.map((v,i)=>v?null:i).filter(v=>v!==null);
+                if(Game.checkWin(b,'X')) return {s:-10}; if(Game.checkWin(b,'O')) return {s:10}; if(!e.length) return {s:0};
+                let moves = [];
+                for(let i of e) {
+                    b[i]=p; let m={i:i, s:this.minimax(b,p==='O'?'X':'O').s};
+                    b[i]=null; moves.push(m);
+                }
+                return moves.reduce((best, m) => (p==='O' ? (m.s > best.s ? m : best) : (m.s < best.s ? m : best)), {s: p==='O'?-Infinity:Infinity});
+            }
+        };
+
+        const UI = {
+            openGridSelect(m) { AudioSys.click(); Game.openSelector(m); },
+            switchScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); },
+            openModal(id) { AudioSys.click(); document.getElementById(id).classList.add('open'); },
+            closeModal(id) { AudioSys.click(); document.getElementById(id).classList.remove('open'); },
+            toggleSound() { AudioSys.on=!AudioSys.on; document.getElementById('btn-sound').innerHTML = AudioSys.on?'<i class="fa-solid fa-volume-high"></i>':'<i class="fa-solid fa-volume-xmark"></i>'; AudioSys.click(); },
+            
+            renderThemes() {
+                const c = document.getElementById('theme-container');
+                Themes.forEach(t => {
+                    const el = document.createElement('div'); el.className='theme-swatch';
+                    el.style.background = t.img !== 'none' ? t.img : t.bg;
+                    if(t.img !== 'none') el.style.backgroundSize = 'cover';
+                    el.onclick = () => this.applyTheme(t, el);
+                    c.appendChild(el);
+                });
+            },
+            applyTheme(t, el) {
+                AudioSys.click();
+                const r = document.documentElement.style;
+                r.setProperty('--bg-color', t.bg); r.setProperty('--bg-image', t.img);
+                r.setProperty('--primary', t.pri); r.setProperty('--secondary', t.sec);
+                document.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active'));
+                if(el) el.classList.add('active');
+                this.closeModal('modal-themes');
+            },
+            buildBoard(n) {
+                const b = document.getElementById('game-board'); b.innerHTML=''; b.className=`board-container grid-${n}`;
+                for(let i=0;i<n*n;i++) {
+                    const c = document.createElement('div'); c.className='cell'; c.onclick=()=>Game.clickCell(i); b.appendChild(c);
+                }
+            },
+            mark(i, p) {
+                const c = document.querySelectorAll('.cell')[i];
+                c.classList.add(p.toLowerCase(), 'taken');
+                c.innerHTML = p==='X'?'<i class="fa-solid fa-xmark"></i>':'<i class="fa-regular fa-circle"></i>';
+            },
+            updateStatus() {
+                const p1 = document.getElementById('score-p1'), p2 = document.getElementById('score-p2');
+                const t = document.getElementById('status-msg');
+                if(Game.turn==='X') { p1.classList.add('active'); p2.classList.remove('active'); t.innerText=(Game.mode==='pvp'?"Player X's Turn":"Your Turn"); }
+                else { p2.classList.add('active'); p1.classList.remove('active'); t.innerText=(Game.mode==='pvp'?"Player O's Turn":"AI Thinking..."); }
+            },
+            updateScores() { document.getElementById('s-p1').innerText=Game.scores.X; document.getElementById('s-p2').innerText=Game.scores.O; },
+            highlight(l) { const c = document.querySelectorAll('.cell'); l.forEach(i=>c[i].classList.add('win')); },
+            result(w) {
+                const txt = document.getElementById('winner-text');
+                if(w==='draw') { txt.innerText="It's a Draw!"; txt.style.color="#fff"; }
+                else { txt.innerHTML = `${(w==='X'?(Game.mode==='pvp'?"Player X":"You"):(Game.mode==='pvp'?"Player O":"AI"))} Won!`; txt.style.color=`var(--${w==='X'?'primary':'secondary'})`; }
+                this.openModal('modal-result');
+            }
+        };
+
+        window.onload = () => Game.init();
+    </script>
+</body>
+</html>
