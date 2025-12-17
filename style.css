@@ -1,4 +1,4 @@
-/* --- NAINO GAMES: HYPER-PROFESSIONAL DARK THEME (FINAL PASS) --- */
+/* --- NAINO GAMES: HYPER-PROFESSIONAL DARK THEME (RESPONSIVE) --- */
 
 :root {
     --accent-color: #bb86fc; /* Primary Violet */
@@ -20,7 +20,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; } /* Prevent side scroll */
 
 body {
     background-color: var(--bg-dark);
@@ -31,6 +31,7 @@ body {
     font-family: var(--font-body);
     line-height: 1.6;
     min-height: 100vh;
+    overflow-x: hidden; /* Critical for mobile alignment */
 }
 
 strong { 
@@ -43,7 +44,7 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
 /* --- NAVIGATION BAR --- */
 .navbar {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 20px 5%; 
+    padding: 15px 5%; 
     background: rgba(0, 0, 0, 0.9);
     backdrop-filter: var(--glass-blur);
     border-bottom: 1px solid rgba(187, 134, 252, 0.3); 
@@ -53,16 +54,14 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
 
 .logo {
     font-family: var(--font-head); 
-    font-size: 1.8rem; 
+    font-size: 1.5rem; 
     font-weight: 900;
     letter-spacing: 1px; 
-    /* Uses dynamic color set by JS or default accent glow */
     background: linear-gradient(45deg, var(--hero-match-color), var(--accent-color));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 8px var(--hero-match-color));
     transition: filter 0.6s ease, background 0.6s ease, transform 0.3s;
 }
-.logo:hover { transform: scale(1.05); }
 
 .nav-links {
     display: flex; 
@@ -70,7 +69,7 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
     list-style: none;
 }
 .nav-links a { 
-    text-transform: uppercase; font-weight: 700; font-size: 0.9rem; 
+    text-transform: uppercase; font-weight: 700; font-size: 0.85rem; 
     color: var(--text-muted); position: relative; letter-spacing: 1px;
 }
 .nav-links a:hover { color: var(--text-light); }
@@ -83,7 +82,8 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
 
 /* --- HERO SECTION --- */
 .hero {
-    height: 100vh;
+    height: 100vh; /* Full screen height */
+    min-height: 600px; /* Prevent squishing on small phones */
     display: flex; align-items: center; justify-content: center;
     text-align: center; background-size: cover; background-position: center; 
     position: relative; overflow: hidden;
@@ -92,28 +92,35 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
 
 .hero-overlay {
     position: absolute; inset: 0;
-    background: linear-gradient(0deg, var(--bg-dark) 10%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.8) 100%);
+    background: linear-gradient(0deg, var(--bg-dark) 5%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.8) 100%);
     z-index: 5;
 }
 
-.hero-content { z-index: 10; transition: opacity 0.6s ease, transform 0.6s ease; }
+.hero-content { 
+    z-index: 10; 
+    padding: 0 20px;
+    width: 100%;
+    max-width: 1200px;
+    transition: opacity 0.6s ease, transform 0.6s ease; 
+}
 .hero-content.fade-out { opacity: 0; transform: translateY(20px) scale(0.98); }
 
 .hero-title {
-    font-family: var(--font-head); font-size: 7rem; font-weight: 900;
-    text-transform: uppercase; margin-bottom: 10px; letter-spacing: 8px;
+    font-family: var(--font-head); font-size: 5rem; font-weight: 900;
+    text-transform: uppercase; margin-bottom: 15px; letter-spacing: 4px;
     color: #fff; 
     text-shadow: 0 0 50px var(--hero-match-color), 0 0 10px rgba(0,0,0,0.5); 
     transition: text-shadow 0.6s ease;
+    line-height: 1.1;
 }
-.hero-content p { font-size: 1.6rem; color: var(--text-muted); margin-bottom: 50px; font-weight: 300; letter-spacing: 1px; }
+.hero-content p { font-size: 1.2rem; color: #ddd; margin-bottom: 40px; font-weight: 400; letter-spacing: 1px; max-width: 800px; margin-left: auto; margin-right: auto;}
 
-.hero-buttons { display: flex; gap: 30px; justify-content: center; }
+.hero-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;}
 
-/* Dynamic Matching Color for Main Button */
+/* Main Button */
 .btn-main {
     position: relative; overflow: hidden;
-    padding: 18px 50px; font-weight: 800; text-transform: uppercase;
+    padding: 16px 40px; font-weight: 800; text-transform: uppercase;
     border: none; 
     background: var(--hero-match-color); 
     color: var(--bg-dark); 
@@ -121,6 +128,8 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
     box-shadow: 0 0 25px var(--hero-match-color); 
     z-index: 1; transition: transform 0.3s, box-shadow 0.3s, background 0.6s ease;
     letter-spacing: 1px;
+    display: inline-block;
+    text-align: center;
 }
 .btn-main::before {
     content: ''; position: absolute; top: 0; left: -100%;
@@ -131,7 +140,6 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
 .btn-main:hover::before { left: 100%; }
 .btn-main:hover { transform: translateY(-5px); box-shadow: 0 10px 35px var(--hero-match-color); }
 
-/* Mobile Button (Secondary) uses dynamic color on hover */
 .mobile-btn { 
     background: transparent; 
     border: 2px solid var(--text-light); 
@@ -145,59 +153,61 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
     border-color: var(--hero-match-color);
 }
 
-/* --- HERO NAV BUTTON (Redesigned for Cycle Look) --- */
+/* Nav Button (Arrow) */
 .hero-nav-btn {
     position: absolute;
-    bottom: 50px; 
-    right: 5%;
-    width: 60px;
-    height: 60px;
-    background: rgba(0, 0, 0, 0.4); /* Glass background */
+    bottom: 30px; 
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.4); 
     backdrop-filter: blur(10px);
-    color: var(--hero-match-color); /* Arrow color is the accent */
-    border: 3px solid var(--hero-match-color); /* Accent Border */
+    color: var(--hero-match-color); 
+    border: 2px solid var(--hero-match-color); 
     border-radius: 50%;
-    font-size: 2.2rem; /* Larger symbol */
+    font-size: 1.5rem; 
     font-weight: bold;
-    line-height: 55px;
-    text-align: center;
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     z-index: 15;
     transition: transform 0.3s, box-shadow 0.3s, background 0.6s ease, border-color 0.6s ease;
     box-shadow: 0 0 15px var(--hero-match-color);
-    padding-right: 0px; 
 }
 .hero-nav-btn:hover {
     transform: scale(1.1) translateX(5px);
-    background: var(--hero-match-color); /* Fill on hover */
-    color: var(--bg-dark); /* Dark text on fill */
+    background: var(--hero-match-color); 
+    color: var(--bg-dark); 
     box-shadow: 0 0 40px var(--hero-match-color);
 }
-.hero-nav-btn:active {
-    transform: scale(0.95);
-}
+.hero-nav-btn:active { transform: scale(0.95); }
 
 
 /* --- GAMES LIBRARY --- */
 .games-section { 
-    padding: 100px 5%; 
-    max-width: 1500px; 
+    padding: 80px 5%; 
+    max-width: 1600px; 
     margin: 0 auto; 
     border-top: 1px solid rgba(187, 134, 252, 0.2); 
 }
 
-.section-header { text-align: center; margin-bottom: 80px; }
+.section-header { text-align: center; margin-bottom: 60px; }
 .section-header h2 { 
-    font-family: var(--font-head); font-size: 3.5rem; font-weight: 900; color: #fff;
+    font-family: var(--font-head); font-size: 3rem; font-weight: 900; color: #fff;
     display: inline-block; position: relative; padding-bottom: 15px;
 }
 .section-header h2::after {
     content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100px; height: 5px; background: var(--accent-glow); border-radius: 2px;
+    width: 80px; height: 4px; background: var(--accent-glow); border-radius: 2px;
     box-shadow: 0 0 20px var(--accent-glow);
 }
 
-.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 40px; }
+/* SMART GRID SYSTEM */
+.games-grid { 
+    display: grid; 
+    /* This line fixes the overflow issues on mobile */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+    gap: 30px; 
+}
 
 .game-card {
     background: var(--bg-card);
@@ -205,16 +215,17 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
     border-radius: 16px; overflow: hidden;
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column;
 }
 
 .game-card:hover { 
-    transform: translateY(-15px); 
+    transform: translateY(-10px); 
     border-color: var(--accent-glow);
     box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(187, 134, 252, 0.5);
 }
 
 .card-thumb {
-    width: 100%; position: relative; padding-top: 56.25%; /* 16:9 */
+    width: 100%; position: relative; padding-top: 56.25%; /* 16:9 Aspect Ratio */
     background: #000; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .card-thumb img {
@@ -223,7 +234,7 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
 }
 .game-card:hover .card-thumb img { transform: scale(1.1); }
 
-.card-details { padding: 30px; }
+.card-details { padding: 25px; display: flex; flex-direction: column; flex-grow: 1; }
 
 .card-title-group {
     display: flex;
@@ -232,42 +243,42 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
 }
 
 .game-logo {
-    width: 55px; height: 55px; margin-right: 20px;
-    border-radius: 12px; 
+    width: 50px; height: 50px; margin-right: 15px;
+    border-radius: 10px; 
     box-shadow: 0 5px 15px rgba(0,0,0,0.6);
     border: 2px solid var(--accent-color);
 }
 
-.card-details h3 { font-size: 1.8rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+.card-details h3 { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; line-height: 1.2;}
 
-.tags { margin-bottom: 20px; }
+.tags { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px;}
 .tag { 
-    font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
     background: rgba(187, 134, 252, 0.1); 
-    padding: 6px 14px; border-radius: 20px; color: var(--accent-glow); 
-    border: 1px solid rgba(187, 134, 252, 0.4); margin-right: 8px;
+    padding: 4px 10px; border-radius: 4px; color: var(--accent-glow); 
+    border: 1px solid rgba(187, 134, 252, 0.4);
 }
 
-.card-details p { color: var(--text-muted); font-size: 1rem; line-height: 1.5; min-height: 48px;}
+.card-details p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1;}
 
-.card-actions { display: flex; gap: 15px; margin-top: 15px; }
+.card-actions { display: flex; gap: 10px; margin-top: auto; }
 
 .btn-sm {
-    flex: 1; text-align: center; padding: 14px;
+    flex: 1; text-align: center; padding: 12px;
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.15);
-    font-size: 0.9rem; font-weight: 700; color: #fff; text-transform: uppercase;
-    border-radius: 8px; transition: 0.2s;
+    font-size: 0.8rem; font-weight: 700; color: #fff; text-transform: uppercase;
+    border-radius: 6px; transition: 0.2s;
 }
 .btn-sm:hover { background: var(--accent-color); border-color: var(--accent-color); box-shadow: 0 0 20px rgba(187, 134, 252, 0.5); }
 .mobile-hover:hover { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.6); }
 
 /* --- INFO & FOOTER --- */
-.info-section { padding: 120px 5%; max-width: 900px; margin: 0 auto; border-top: 1px solid #1a1a1a; text-align: center; }
-.info-content { text-align: left; color: #ccc; font-size: 1.1rem; }
+.info-section { padding: 80px 5%; max-width: 900px; margin: 0 auto; border-top: 1px solid #1a1a1a; text-align: center; }
+.info-content { text-align: left; color: #ccc; font-size: 1rem; }
 .subsection-title { 
-    font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; color: var(--accent-glow); 
-    margin: 60px 0 20px; border-bottom: 2px solid rgba(187, 134, 252, 0.3); padding-bottom: 8px; 
+    font-family: var(--font-head); font-size: 1.5rem; font-weight: 700; color: var(--accent-glow); 
+    margin: 50px 0 20px; border-bottom: 2px solid rgba(187, 134, 252, 0.3); padding-bottom: 8px; 
 }
 
 .channel-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 30px; justify-content: center;}
@@ -276,25 +287,53 @@ a { text-decoration: none; color: inherit; transition: all 0.3s cubic-bezier(0.2
     flex: 1; display: inline-block; text-align: center;
     background: #cc0000; color: #fff; padding: 16px 30px;
     font-weight: 700; text-transform: uppercase; border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5); min-width: 220px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5); min-width: 250px;
 }
 .youtube-btn-main:hover { background: #ff0000; box-shadow: 0 0 30px rgba(255,0,0,0.6); transform: translateY(-4px); }
 
-.contact-email { display: block; font-size: 2.2rem; font-weight: 700; color: var(--accent-glow); margin: 40px 0; text-align: center; }
-.contact-email:hover { color: #fff; text-shadow: 0 0 25px var(--accent-color); }
+.contact-email { display: block; font-size: 1.8rem; font-weight: 700; color: var(--accent-glow); margin: 40px 0; text-align: center; word-break: break-all; }
 
-footer { text-align: center; padding: 60px; color: #444; font-size: 0.9rem; background: #000000; border-top: 1px solid #111; }
+footer { text-align: center; padding: 40px; color: #444; font-size: 0.9rem; background: #000000; border-top: 1px solid #111; }
 
-@media (max-width: 992px) {
-    .hero-title { font-size: 5rem; letter-spacing: 5px; }
+
+/* ==========================================================================
+   MOBILE & TABLET OPTIMIZATIONS (The Fix)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+    .hero-title { font-size: 4rem; }
+    .games-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-    .hero-title { font-size: 3.5rem; letter-spacing: 3px; }
-    .hero-buttons { flex-direction: column; gap: 15px; }
-    .nav-links { display: flex; flex-wrap: wrap; justify-content: center; } 
-    .channel-grid { flex-direction: column; }
-    .games-grid { grid-template-columns: 1fr; }
-    .btn-main { padding: 15px 30px; }
-    .hero-nav-btn { bottom: 20px; right: 20px; }
+    /* Navbar Adjustment */
+    .navbar { flex-direction: column; gap: 15px; padding: 15px; }
+    .nav-links { gap: 15px; justify-content: center; width: 100%; flex-wrap: wrap; }
+    
+    /* Hero Adjustments */
+    .hero-title { font-size: 2.8rem; letter-spacing: 2px; }
+    .hero-content p { font-size: 1rem; padding: 0 10px; }
+    .hero-buttons { flex-direction: column; width: 100%; gap: 15px; }
+    .btn-main { width: 100%; }
+    
+    /* Arrow Button Position */
+    .hero-nav-btn { bottom: 20px; right: 20px; width: 45px; height: 45px; }
+
+    /* Grid Adjustments */
+    .games-section { padding: 60px 5%; }
+    .games-grid { 
+        grid-template-columns: 1fr; /* Force 1 column on mobile */
+        gap: 25px; 
+    }
+    .game-card { margin: 0; width: 100%; }
+    
+    /* Font Sizing */
+    .section-header h2 { font-size: 2.2rem; }
+    .contact-email { font-size: 1.4rem; }
+}
+
+/* Very Small Screens (Old Phones) */
+@media (max-width: 380px) {
+    .hero-title { font-size: 2.2rem; }
+    .logo { font-size: 1.3rem; }
 }
