@@ -307,7 +307,7 @@
         &copy; 2025 Naino Games. All Rights Reserved.
     </footer>
 
-    <script>
+   <script>
         // --- DATA AND MATCHING COLOR LOGIC ---
         const heroSection = document.getElementById('hero-section');
         const heroTitle = document.getElementById('hero-game-name');
@@ -328,28 +328,19 @@
         // --- SMART SUGGESTION LOGIC ---
         function getStartIndex() {
             const isMobile = isMobileDevice();
-            
-            // Find the first game compatible with the current device
+            // Find first compatible game
             const index = allCards.findIndex(card => {
                 const mode = card.getAttribute('data-mode');
-                
-                if (isMobile) {
-                    // On Mobile: Allow 'split', 'unified', 'mobile-only'. Skip 'pc-only'.
-                    return mode !== 'pc-only';
-                } else {
-                    // On PC: Allow 'split', 'unified', 'pc-only'. Skip 'mobile-only'.
-                    return mode !== 'mobile-only';
-                }
+                if (isMobile) return mode !== 'pc-only';
+                else return mode !== 'mobile-only';
             });
-
-            // If no match found (unlikely), default to 0
             return index !== -1 ? index : 0;
         }
 
-        // Set the initial index based on device
+        // Set initial index
         currentCardIndex = getStartIndex();
         
-        // Function to set Hero details based on the card data
+        // Function to set Hero details
         function updateHero(card) {
             const banner = card.getAttribute('data-banner');
             const name = card.getAttribute('data-name');
@@ -357,7 +348,7 @@
             const pcLink = card.getAttribute('data-pc');
             const mobileLink = card.getAttribute('data-mobile');
             const matchColor = card.getAttribute('data-match'); 
-            const mode = card.getAttribute('data-mode'); // split, pc-only, unified, or mobile-only
+            const mode = card.getAttribute('data-mode');
 
             // 1. Initiate Transition
             heroSection.style.backgroundImage = `url('${banner}')`;
@@ -370,27 +361,23 @@
                 heroTitle.textContent = name;
                 heroDesc.textContent = desc;
 
-                // Configure Buttons based on MODE
+                // Configure Buttons
                 if (mode === 'unified') {
-                    // Unified Games
                     heroMainLink.href = pcLink;
                     heroMainLink.textContent = "Play Game";
                     heroMobileLink.style.display = 'none';
                 } 
                 else if (mode === 'pc-only') {
-                    // PC Only Games
                     heroMainLink.href = pcLink;
                     heroMainLink.textContent = "Play PC Version";
                     heroMobileLink.style.display = 'none';
                 } 
                 else if (mode === 'mobile-only') {
-                    // Mobile Only Games
                     heroMainLink.href = pcLink; 
                     heroMainLink.textContent = "Play Mobile Version";
                     heroMobileLink.style.display = 'none';
                 }
                 else {
-                    // Split Games
                     heroMainLink.href = pcLink;
                     heroMainLink.textContent = "Play PC Version";
                     heroMobileLink.style.display = 'inline-block';
@@ -402,7 +389,7 @@
             }, 300); 
         }
 
-        // Function to move to the next game
+        // Cycle next game
         function nextGame() {
             currentCardIndex = (currentCardIndex + 1) % allCards.length;
             updateHero(allCards[currentCardIndex]);
@@ -413,22 +400,26 @@
              nextGame();
         });
 
-        // Set initial Hero content based on smart suggestion
+        // Initialize
         updateHero(allCards[currentCardIndex]);
 
+        // --- EVENT LISTENERS (PC & MOBILE) ---
         allCards.forEach((card, index) => {
+            
+            // PC Hover
             card.addEventListener('mouseenter', () => {
-                if (index !== currentCardIndex) {
-                    updateHero(card);
-                }
+                if (index !== currentCardIndex) updateHero(card);
             });
+            
             card.addEventListener('mouseleave', () => {
-                if (index !== currentCardIndex) {
-                    updateHero(allCards[currentCardIndex]); 
-                }
+                if (index !== currentCardIndex) updateHero(allCards[currentCardIndex]); 
             });
+
+            // Mobile & PC Click
+            // This ensures clicking a card sets it as the "Active" hero card
             card.addEventListener('click', () => {
                  currentCardIndex = index;
+                 updateHero(card); // Force update on click for Mobile
             });
         });
 
@@ -436,19 +427,27 @@
         let AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         let hasInteracted = false; 
-        let hoverListenersAttached = false; 
 
         const initAudioContext = () => {
             if (!audioCtx) {
                 audioCtx = new AudioContext();
                 hasInteracted = true;
-                attachHoverListeners(); 
+                // Add listeners only after first interaction
+                const interactiveElements = document.querySelectorAll('a, button, .game-card');
+                interactiveElements.forEach(el => {
+                    el.addEventListener('mouseenter', () => { if(hasInteracted) playHoverTone(); });
+                });
+                
                 document.removeEventListener('mousedown', initAudioContext, true);
                 document.removeEventListener('click', initAudioContext, true);
+                document.removeEventListener('touchstart', initAudioContext, true);
             }
         };
+        
+        // Add touchstart for mobile audio init
         document.addEventListener('mousedown', initAudioContext, true);
         document.addEventListener('click', initAudioContext, true);
+        document.addEventListener('touchstart', initAudioContext, true);
 
         const playClickTone = () => { 
             if (!audioCtx) return;
@@ -482,19 +481,9 @@
             oscillator.stop(now + 0.03);
         };
 
-        const attachHoverListeners = () => {
-            if (hoverListenersAttached) return;
-            const interactiveElements = document.querySelectorAll('.navbar a, .btn-main, .btn-sm, .logo-link, .youtube-btn-main, #hero-next-btn');
-            interactiveElements.forEach(element => {
-                element.addEventListener('mouseenter', () => {
-                    if (hasInteracted) playHoverTone();
-                });
-            });
-            hoverListenersAttached = true;
-        }
-        document.body.addEventListener('mousedown', (event) => {
-            const target = event.target.closest('a, button, .logo-link, .youtube-btn-main, #hero-next-btn');
-            if (target && target.id !== 'hero-next-btn') playClickTone(); 
+        // Global click sound for links
+        document.body.addEventListener('click', (event) => {
+            if (event.target.closest('a, button')) playClickTone();
         });
     </script>
 </body>
