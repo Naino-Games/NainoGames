@@ -29,21 +29,21 @@
         }
         .back-to-lib:hover { background: var(--accent-color); color: #000; }
 
-        /* THE WRAPPER: Fixes Android Scaling */
+        /* THE WRAPPER: Fixed for Android Scaling */
         .wrapper {
             position: relative; width: 100%; max-width: 1000px; background: #000;
             border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
-            aspect-ratio: 16 / 9; /* Default PC Ratio */
+            aspect-ratio: 16 / 9;
         }
 
         @media (max-width: 768px) {
             .game-view-container { padding: 10px 15px; }
-            /* Force higher height on mobile so suggested games stay below the fold */
+            /* Force higher height on mobile to push suggestions below the fold */
             .wrapper { aspect-ratio: auto; height: 70vh; min-height: 500px; }
             .wrapper.mobile-game-frame { height: 85vh; }
         }
 
-        /* Fullscreen SVG Symbols */
+        /* Fullscreen Controls */
         #fullscreen-btn {
             position: absolute; bottom: 15px; right: 15px; z-index: 100;
             width: 44px; height: 44px; cursor: pointer; border-radius: 8px;
@@ -69,9 +69,6 @@
         }
     </style>
 </head>
-    <script src="https://3nbf4.com/act/files/tag.min.js?z=10345521" data-cfasync="false" async></script>
-    <script>(function(s){s.dataset.zone='10345529',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <script>(function(s){s.dataset.zone='10345530',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script> 
 <body>
 
     <nav class="navbar">
@@ -118,8 +115,12 @@
             }
 
             fsBtn.addEventListener('click', () => {
-                if (!document.fullscreenElement) wrapper.requestFullscreen();
-                else document.exitFullscreen();
+                if (!document.fullscreenElement) {
+                    if (wrapper.requestFullscreen) wrapper.requestFullscreen();
+                    else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                }
             });
 
             document.addEventListener('fullscreenchange', () => {
@@ -130,16 +131,18 @@
                 }
             });
 
-            // Corrected "tictactoe" and .webp logic for suggested games
+            // Specific Requested Suggested Games Pool
             const allGames = [
-                { id: 'flappy', name: "FLAPPY NAIN", banner: "images/flappynainbanner.webp", logo: "images/flappynainlogo.webp", tags: ["Skill"], link: "game-wrapper.html?src=games/flappynain/pc/index.html", desc: "A challenging one-tap arcade game." },
-                { id: 'snake', name: "SNAKE LAND", banner: "images/snakelandbanner.webp", logo: "images/snakelandlogo.webp", tags: ["Classic"], link: "game-wrapper.html?src=games/snakeland/pc/index.html", desc: "The timeless snake game with modern physics." },
-                { id: 'tictactoe', name: "TIC TAC TOE", banner: "images/tictactoebanner.webp", logo: "images/tictactoelogo.webp", tags: ["Puzzle"], link: "game-wrapper.html?src=games/tictactoe/pc/index.html", desc: "The ultimate strategic puzzle game." },
-                { id: 'crush', name: "CRUSH CONNECT", banner: "images/crushconnectbanner.webp", logo: "images/crushconnectlogo.webp", tags: ["Puzzle"], link: "game-wrapper.html?src=games/crushconnect/pc/index.html", desc: "Addictive matching puzzle saga." }
+                { id: 'nainodrive', name: "NAINO DRIVE", banner: "images/nainodrivebanner.webp", logo: "images/nainodrivelogo.webp", tags: ["Action", "PC"], link: "game-wrapper.html?src=games/nainodrive/index.html", desc: "Push your limits in this high-octane driving experience." },
+                { id: 'crushconnect', name: "CRUSH CONNECT", banner: "images/crushconnectbanner.webp", logo: "images/crushconnectlogo.webp", tags: ["Puzzle", "Mobile"], link: "game-wrapper.html?src=games/crushconnect/index.html", desc: "Link matching items in this addictive puzzle saga." },
+                { id: 'tictactoe', name: "TIC TAC TOE", banner: "images/tictactoebanner.webp", logo: "images/tictactoelogo.webp", tags: ["Strategy", "Multiplayer"], link: "game-wrapper.html?src=games/tictactoe/index.html", desc: "The ultimate strategic puzzle game. Challenge a friend or the AI." },
+                { id: 'spendfathermoney', name: "SPEND YOUR FATHER'S MONEY", banner: "images/spendfathermoneybanner.webp", logo: "images/spendfathermoneylogo.webp", tags: ["Fun", "Simulation"], link: "game-wrapper.html?src=games/spendfathermoney/index.html", desc: "Live the high life and spend it all in this fun simulation." }
             ];
 
             const grid = document.getElementById('suggested-grid');
-            const shuffled = allGames.filter(g => !iframe.src.includes(g.id)).sort(() => 0.5 - Math.random()).slice(0, 3);
+            // Show all 4 in the grid, but typically excludes the one currently being played
+            const currentId = iframe.src;
+            const shuffled = allGames.filter(g => !currentId.includes(g.id)).sort(() => 0.5 - Math.random());
 
             shuffled.forEach(game => {
                 grid.innerHTML += `
