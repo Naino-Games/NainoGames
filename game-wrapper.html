@@ -16,6 +16,7 @@
             width: 100%; padding: 20px 5%; display: flex; flex-direction: column; align-items: center; flex-grow: 1;
         }
 
+        /* Back Button Above the Game Box */
         .game-header-actions {
             width: 100%; max-width: 1000px; display: flex; justify-content: flex-start; margin-bottom: 12px;
         }
@@ -24,22 +25,25 @@
             background: rgba(255, 255, 255, 0.05); color: #fff; padding: 10px 18px;
             border-radius: 6px; font-weight: 700; font-size: 0.75rem;
             border: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
-            text-transform: uppercase;
+            text-transform: uppercase; text-decoration: none;
         }
+        .back-to-lib:hover { background: var(--accent-color); color: #000; }
 
-        /* Fixed Android Measurements */
+        /* THE WRAPPER: Fixes Android Scaling */
         .wrapper {
             position: relative; width: 100%; max-width: 1000px; background: #000;
             border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
-            aspect-ratio: 16 / 9;
+            aspect-ratio: 16 / 9; /* Default PC Ratio */
         }
 
         @media (max-width: 768px) {
             .game-view-container { padding: 10px 15px; }
-            .wrapper { aspect-ratio: auto; height: 65vh; min-height: 450px; }
-            .wrapper.mobile-game-frame { height: 80vh; }
+            /* Force higher height on mobile so suggested games stay below the fold */
+            .wrapper { aspect-ratio: auto; height: 70vh; min-height: 500px; }
+            .wrapper.mobile-game-frame { height: 85vh; }
         }
 
+        /* Fullscreen SVG Symbols */
         #fullscreen-btn {
             position: absolute; bottom: 15px; right: 15px; z-index: 100;
             width: 44px; height: 44px; cursor: pointer; border-radius: 8px;
@@ -48,11 +52,13 @@
         }
         #fullscreen-btn svg { width: 22px; height: 22px; fill: white; }
 
+        /* Hide UI in Fullscreen */
         :fullscreen #fullscreen-btn, :fullscreen .game-header-actions { display: none; }
         :-webkit-full-screen #fullscreen-btn, :-webkit-full-screen .game-header-actions { display: none; }
 
         iframe { width: 100%; height: 100%; border: none; display: block; }
 
+        /* Suggested Section: Exact Library Match */
         .suggested-section { 
             width: 100%; max-width: 1200px; margin-top: 60px; padding-bottom: 40px; 
             border-top: 1px solid rgba(255,255,255,0.1); padding-top: 40px;
@@ -73,7 +79,7 @@
     </nav>
 
     <div class="game-view-container">
-        <div class="game-header-actions">
+        <div class="game-header-actions" id="top-actions">
             <a href="index.html#games" class="back-to-lib">← BACK TO LIBRARY</a>
         </div>
 
@@ -92,7 +98,7 @@
     </div>
 
     <footer style="text-align: center; padding: 40px; color: #444; font-size: 0.85rem; background: #000; border-top: 1px solid #111;">
-        &copy; 2025 Naino Games. | <a href="privacy.html" style="color: #666;">Privacy Policy</a> | <a href="contact.html" style="color: #666;">Support</a>
+        &copy; 2025 Naino Games. | <a href="privacy.html" style="color: #666; text-decoration:none;">Privacy Policy</a> | <a href="contact.html" style="color: #666; text-decoration:none;">Support</a>
     </footer>
 
     <script>
@@ -102,6 +108,8 @@
             const iframe = document.getElementById('game-iframe');
             const wrapper = document.getElementById('game-wrapper');
             const fsBtn = document.getElementById('fullscreen-btn');
+            const maxIcon = document.getElementById('fs-icon-max');
+            const minIcon = document.getElementById('fs-icon-min');
 
             if (gameSrc) {
                 const decodedSrc = decodeURIComponent(gameSrc);
@@ -114,12 +122,20 @@
                 else document.exitFullscreen();
             });
 
-            // Suggested Games - UPDATED TO .WEBP
+            document.addEventListener('fullscreenchange', () => {
+                if (document.fullscreenElement) {
+                    maxIcon.style.display = 'none'; minIcon.style.display = 'block';
+                } else {
+                    maxIcon.style.display = 'block'; minIcon.style.display = 'none';
+                }
+            });
+
+            // Corrected "tictactoe" and .webp logic for suggested games
             const allGames = [
-                { id: 'flappy', name: "FLAPPY NAIN", banner: "images/flappynainbanner.webp", logo: "images/flappynainlogo.webp", tags: ["PC", "Mobile", "Skill"], link: "game-wrapper.html?src=games/flappynain/pc/index.html", desc: "A challenging one-tap arcade game optimized for precision control." },
-                { id: 'snake', name: "SNAKE LAND", banner: "images/snakelandbanner.webp", logo: "images/snakelandlogo.webp", tags: ["PC", "Classic"], link: "game-wrapper.html?src=games/snakeland/pc/index.html", desc: "Experience the timeless snake game with modern physics and difficulty." },
-                { id: 'tictac', name: "TIC TAC TOE", banner: "images/tictactoebanner.webp", logo: "images/tictoctoelogo.webp", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/tictactoe/pc/index.html", desc: "The ultimate strategic puzzle game." },
-                { id: 'crush', name: "CRUSH CONNECT", banner: "images/crushconnectbanner.webp", logo: "images/crushconnectlogo.webp", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/crushconnect/pc/index.html", desc: "Link matching items in this addictive puzzle saga." }
+                { id: 'flappy', name: "FLAPPY NAIN", banner: "images/flappynainbanner.webp", logo: "images/flappynainlogo.webp", tags: ["Skill"], link: "game-wrapper.html?src=games/flappynain/pc/index.html", desc: "A challenging one-tap arcade game." },
+                { id: 'snake', name: "SNAKE LAND", banner: "images/snakelandbanner.webp", logo: "images/snakelandlogo.webp", tags: ["Classic"], link: "game-wrapper.html?src=games/snakeland/pc/index.html", desc: "The timeless snake game with modern physics." },
+                { id: 'tictactoe', name: "TIC TAC TOE", banner: "images/tictactoebanner.webp", logo: "images/tictactoelogo.webp", tags: ["Puzzle"], link: "game-wrapper.html?src=games/tictactoe/pc/index.html", desc: "The ultimate strategic puzzle game." },
+                { id: 'crush', name: "CRUSH CONNECT", banner: "images/crushconnectbanner.webp", logo: "images/crushconnectlogo.webp", tags: ["Puzzle"], link: "game-wrapper.html?src=games/crushconnect/pc/index.html", desc: "Addictive matching puzzle saga." }
             ];
 
             const grid = document.getElementById('suggested-grid');
@@ -146,5 +162,3 @@
     </script>
 </body>
 </html>
-
-
