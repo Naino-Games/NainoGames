@@ -12,23 +12,12 @@
         :root { --hero-match-color: var(--accent-glow); }
         body { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         
-        /* 1. Reduce top padding on mobile so the game is higher up */
         .game-view-container {
-            width: 100%; 
-            padding: 20px 5%; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            flex-grow: 1;
+            width: 100%; padding: 20px 5%; display: flex; flex-direction: column; align-items: center; flex-grow: 1;
         }
 
-        /* 2. Back button stays above the game boundary */
         .game-header-actions {
-            width: 100%; 
-            max-width: 1000px; 
-            display: flex; 
-            justify-content: flex-start; 
-            margin-bottom: 12px;
+            width: 100%; max-width: 1000px; display: flex; justify-content: flex-start; margin-bottom: 12px;
         }
 
         .back-to-lib {
@@ -38,36 +27,19 @@
             text-transform: uppercase;
         }
 
-        /* 3. FIX: Wrapper Measurements for Android */
+        /* Fixed Android Measurements */
         .wrapper {
-            position: relative; 
-            width: 100%; 
-            max-width: 1000px; 
-            background: #000;
-            border-radius: 12px; 
-            overflow: hidden; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.1);
-            aspect-ratio: 16 / 9; /* Default for PC */
+            position: relative; width: 100%; max-width: 1000px; background: #000;
+            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+            aspect-ratio: 16 / 9;
         }
 
         @media (max-width: 768px) {
             .game-view-container { padding: 10px 15px; }
-            
-            /* Force the game box to be much larger on mobile screens */
-            .wrapper {
-                aspect-ratio: auto;
-                height: 65vh; /* Larger height so suggested games don't overlap */
-                min-height: 450px; 
-            }
-            
-            /* If the game is a mobile-specific portrait game */
-            .wrapper.mobile-game-frame {
-                height: 80vh; 
-            }
+            .wrapper { aspect-ratio: auto; height: 65vh; min-height: 450px; }
+            .wrapper.mobile-game-frame { height: 80vh; }
         }
 
-        /* 4. Fullscreen Button (Bottom Right) */
         #fullscreen-btn {
             position: absolute; bottom: 15px; right: 15px; z-index: 100;
             width: 44px; height: 44px; cursor: pointer; border-radius: 8px;
@@ -76,20 +48,14 @@
         }
         #fullscreen-btn svg { width: 22px; height: 22px; fill: white; }
 
-        /* Hide UI elements during Fullscreen mode */
         :fullscreen #fullscreen-btn, :fullscreen .game-header-actions { display: none; }
         :-webkit-full-screen #fullscreen-btn, :-webkit-full-screen .game-header-actions { display: none; }
 
         iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* Suggested Section - Matching Library Style */
         .suggested-section { 
-            width: 100%; 
-            max-width: 1200px; 
-            margin-top: 60px; 
-            padding-bottom: 40px; 
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 40px;
+            width: 100%; max-width: 1200px; margin-top: 60px; padding-bottom: 40px; 
+            border-top: 1px solid rgba(255,255,255,0.1); padding-top: 40px;
         }
         .suggested-header { 
             font-family: var(--font-head); font-size: 2rem; font-weight: 900; 
@@ -97,9 +63,6 @@
         }
     </style>
 </head>
-    <script src="https://3nbf4.com/act/files/tag.min.js?z=10345521" data-cfasync="false" async></script>
-    <script>(function(s){s.dataset.zone='10345529',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <script>(function(s){s.dataset.zone='10345530',s.src='https://gizokraijaw.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script> 
 <body>
 
     <nav class="navbar">
@@ -107,14 +70,13 @@
     </nav>
 
     <div class="game-view-container">
-        <div class="game-header-actions" id="top-actions">
+        <div class="game-header-actions">
             <a href="index.html#games" class="back-to-lib">← BACK TO LIBRARY</a>
         </div>
 
         <div id="game-wrapper" class="wrapper">
             <iframe id="game-iframe" src="" allow="autoplay; fullscreen; keyboard"></iframe>
-            
-            <div id="fullscreen-btn" title="Toggle Fullscreen">
+            <div id="fullscreen-btn">
                 <svg id="fs-icon-max" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
                 <svg id="fs-icon-min" viewBox="0 0 24 24" style="display:none;"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
             </div>
@@ -122,8 +84,7 @@
 
         <section class="suggested-section">
             <h3 class="suggested-header">MORE GAMES FOR YOU</h3>
-            <div class="games-grid" id="suggested-grid">
-                </div>
+            <div class="games-grid" id="suggested-grid"></div>
         </section>
     </div>
 
@@ -138,53 +99,30 @@
             const iframe = document.getElementById('game-iframe');
             const wrapper = document.getElementById('game-wrapper');
             const fsBtn = document.getElementById('fullscreen-btn');
-            const maxIcon = document.getElementById('fs-icon-max');
-            const minIcon = document.getElementById('fs-icon-min');
 
             if (gameSrc) {
                 const decodedSrc = decodeURIComponent(gameSrc);
                 iframe.src = decodedSrc;
-                
-                if (decodedSrc.includes('/mobile/')) {
-                    wrapper.classList.add('mobile-game-frame');
-                }
+                if (decodedSrc.includes('/mobile/')) wrapper.classList.add('mobile-game-frame');
             }
 
-            // Fullscreen Logic
             fsBtn.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    if (wrapper.requestFullscreen) wrapper.requestFullscreen();
-                    else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
-                } else {
-                    if (document.exitFullscreen) document.exitFullscreen();
-                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                }
+                if (!document.fullscreenElement) wrapper.requestFullscreen();
+                else document.exitFullscreen();
             });
 
-            document.addEventListener('fullscreenchange', () => {
-                if (document.fullscreenElement) {
-                    maxIcon.style.display = 'none';
-                    minIcon.style.display = 'block';
-                } else {
-                    maxIcon.style.display = 'block';
-                    minIcon.style.display = 'none';
-                }
-            });
-
-            // Suggested Games - Exact same structure as index.html
+            // Suggested Games - UPDATED TO .WEBP
             const allGames = [
-                { id: 'flappy', name: "FLAPPY NAIN", banner: "images/flappynainbanner.png", logo: "images/flappynainlogo.png", tags: ["PC", "Mobile", "Skill"], link: "game-wrapper.html?src=games/flappynain/pc/index.html", desc: "A challenging one-tap arcade game optimized for precision control." },
-                { id: 'snake', name: "SNAKE LAND", banner: "images/snakelandbanner.png", logo: "images/snakelandlogo.png", tags: ["PC", "Classic"], link: "game-wrapper.html?src=games/snakeland/pc/index.html", desc: "Experience the timeless snake game with modern physics and difficulty." },
-                { id: 'tictac', name: "TIC TAC TOE", banner: "images/tictactaebanner.png", logo: "images/tictactaelogo.png", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/tictactae/pc/index.html", desc: "The ultimate strategic puzzle game. Challenge a friend or the smart AI." },
-                { id: 'crush', name: "CRUSH CONNECT", banner: "images/crushconnectbanner.png", logo: "images/crushconnectlogo.png", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/crushconnect/pc/index.html", desc: "Link matching items in this addictive puzzle saga. Strategy is key." }
+                { id: 'flappy', name: "FLAPPY NAIN", banner: "images/flappynainbanner.webp", logo: "images/flappynainlogo.webp", tags: ["PC", "Mobile", "Skill"], link: "game-wrapper.html?src=games/flappynain/pc/index.html", desc: "A challenging one-tap arcade game optimized for precision control." },
+                { id: 'snake', name: "SNAKE LAND", banner: "images/snakelandbanner.webp", logo: "images/snakelandlogo.webp", tags: ["PC", "Classic"], link: "game-wrapper.html?src=games/snakeland/pc/index.html", desc: "Experience the timeless snake game with modern physics and difficulty." },
+                { id: 'tictac', name: "TIC TAC TOE", banner: "images/tictactaebanner.webp", logo: "images/tictactaelogo.webp", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/tictactae/pc/index.html", desc: "The ultimate strategic puzzle game." },
+                { id: 'crush', name: "CRUSH CONNECT", banner: "images/crushconnectbanner.webp", logo: "images/crushconnectlogo.webp", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/crushconnect/pc/index.html", desc: "Link matching items in this addictive puzzle saga." }
             ];
 
             const grid = document.getElementById('suggested-grid');
-            const filtered = allGames.filter(g => !iframe.src.includes(g.id));
-            const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 3);
+            const shuffled = allGames.filter(g => !iframe.src.includes(g.id)).sort(() => 0.5 - Math.random()).slice(0, 3);
 
             shuffled.forEach(game => {
-                const tagsHtml = game.tags.map(t => `<span class="tag">${t}</span>`).join('');
                 grid.innerHTML += `
                     <div class="game-card">
                         <div class="card-thumb"><img src="${game.banner}" alt="${game.name}"></div>
@@ -193,17 +131,15 @@
                                 <img src="${game.logo}" class="game-logo" alt="">
                                 <h3>${game.name}</h3>
                             </div>
-                            <div class="tags">${tagsHtml}</div>
+                            <div class="tags">${game.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
                             <p>${game.desc}</p>
                             <div class="card-actions">
                                 <a href="${game.link}" class="btn-sm full-width">Play Now</a>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         });
     </script>
 </body>
 </html>
-
