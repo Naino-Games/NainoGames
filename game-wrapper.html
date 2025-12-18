@@ -10,30 +10,25 @@
 
     <style>
         :root { --hero-match-color: var(--accent-glow); }
+        body { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         
-        body { 
-            display: flex; 
-            flex-direction: column; 
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
+        /* 1. Reduce top padding on mobile so the game is higher up */
         .game-view-container {
             width: 100%; 
-            padding: 15px 5%; 
+            padding: 20px 5%; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             flex-grow: 1;
         }
 
-        /* Responsive Header */
+        /* 2. Back button stays above the game boundary */
         .game-header-actions {
             width: 100%; 
             max-width: 1000px; 
             display: flex; 
             justify-content: flex-start; 
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .back-to-lib {
@@ -43,7 +38,7 @@
             text-transform: uppercase;
         }
 
-        /* THE WRAPPER - Fixed for Android Measurements */
+        /* 3. FIX: Wrapper Measurements for Android */
         .wrapper {
             position: relative; 
             width: 100%; 
@@ -53,42 +48,52 @@
             overflow: hidden; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             border: 1px solid rgba(255,255,255,0.1);
-            /* Fallback aspect ratio */
-            aspect-ratio: 16 / 9;
+            aspect-ratio: 16 / 9; /* Default for PC */
         }
 
-        /* Mobile specific adjustments to height to avoid cutting off */
         @media (max-width: 768px) {
-            .wrapper.mobile-game-frame {
-                max-width: 100%;
-                width: 100%;
+            .game-view-container { padding: 10px 15px; }
+            
+            /* Force the game box to be much larger on mobile screens */
+            .wrapper {
                 aspect-ratio: auto;
-                height: 75vh; /* Force a healthy height on mobile browser load */
+                height: 65vh; /* Larger height so suggested games don't overlap */
+                min-height: 450px; 
             }
-            .game-view-container { padding: 10px; }
+            
+            /* If the game is a mobile-specific portrait game */
+            .wrapper.mobile-game-frame {
+                height: 80vh; 
+            }
         }
 
+        /* 4. Fullscreen Button (Bottom Right) */
         #fullscreen-btn {
             position: absolute; bottom: 15px; right: 15px; z-index: 100;
             width: 44px; height: 44px; cursor: pointer; border-radius: 8px;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
             border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
         }
-        #fullscreen-btn svg { width: 24px; height: 24px; fill: white; pointer-events: none; }
+        #fullscreen-btn svg { width: 22px; height: 22px; fill: white; }
 
-        /* Fullscreen behaviors */
-        :fullscreen .wrapper { border-radius: 0; border: none; }
-        :fullscreen #fullscreen-btn { opacity: 0; }
+        /* Hide UI elements during Fullscreen mode */
+        :fullscreen #fullscreen-btn, :fullscreen .game-header-actions { display: none; }
+        :-webkit-full-screen #fullscreen-btn, :-webkit-full-screen .game-header-actions { display: none; }
 
         iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        .pc-game-frame { aspect-ratio: 16 / 9; }
-
-        /* Suggested Section */
-        .suggested-section { width: 100%; max-width: 1200px; margin-top: 50px; }
+        /* Suggested Section - Matching Library Style */
+        .suggested-section { 
+            width: 100%; 
+            max-width: 1200px; 
+            margin-top: 60px; 
+            padding-bottom: 40px; 
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 40px;
+        }
         .suggested-header { 
-            font-family: var(--font-head); font-size: 1.5rem; font-weight: 900; 
-            margin-bottom: 25px; color: #fff; text-align: center;
+            font-family: var(--font-head); font-size: 2rem; font-weight: 900; 
+            margin-bottom: 40px; color: #fff; text-align: center;
         }
     </style>
 </head>
@@ -119,7 +124,7 @@
         </section>
     </div>
 
-    <footer style="text-align: center; padding: 30px; color: #444; font-size: 0.85rem; background: #000; border-top: 1px solid #111;">
+    <footer style="text-align: center; padding: 40px; color: #444; font-size: 0.85rem; background: #000; border-top: 1px solid #111;">
         &copy; 2025 Naino Games. | <a href="privacy.html" style="color: #666;">Privacy Policy</a> | <a href="contact.html" style="color: #666;">Support</a>
     </footer>
 
@@ -137,21 +142,19 @@
                 const decodedSrc = decodeURIComponent(gameSrc);
                 iframe.src = decodedSrc;
                 
-                // Detection for layout
                 if (decodedSrc.includes('/mobile/')) {
                     wrapper.classList.add('mobile-game-frame');
-                } else {
-                    wrapper.classList.add('pc-game-frame');
                 }
             }
 
-            // Enhanced Fullscreen logic for Mobile
+            // Fullscreen Logic
             fsBtn.addEventListener('click', () => {
                 if (!document.fullscreenElement) {
                     if (wrapper.requestFullscreen) wrapper.requestFullscreen();
                     else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
                 } else {
                     if (document.exitFullscreen) document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                 }
             });
 
@@ -159,26 +162,26 @@
                 if (document.fullscreenElement) {
                     maxIcon.style.display = 'none';
                     minIcon.style.display = 'block';
-                    fsBtn.style.opacity = "0.2"; // Fade out but keep accessible
                 } else {
                     maxIcon.style.display = 'block';
                     minIcon.style.display = 'none';
-                    fsBtn.style.opacity = "1";
                 }
             });
 
-            // Data for Suggested Games (Matches main library style)
+            // Suggested Games - Exact same structure as index.html
             const allGames = [
-                { id: 'flappy', name: "FLAPPY NAIN", banner: "images/flappynainbanner.webp", logo: "images/flappynainlogo.webp", tags: ["Skill"], link: "game-wrapper.html?src=games/flappynain/pc/index.html" },
-                { id: 'drive', name: "NAINO DRIVE", banner: "images/nainodrivebanner.webp", logo: "images/nainodrivelogo.webp", tags: ["Action"], link: "game-wrapper.html?src=games/nainodrive/index.html" },
-                { id: 'tictac', name: "TIC TAC TOE", banner: "images/tictactoebanner.webp", logo: "images/tictactoelogo.webp", tags: ["Puzzle"], link: "game-wrapper.html?src=games/tictactoe/index.html" },
-                { id: 'draw', name: "NAINO DRAW", banner: "images/drawbattlebanner.webp", logo: "images/drawbattlelogo.webp", tags: ["AI"], link: "game-wrapper.html?src=games/drawbattle/index.html" }
+                { id: 'flappy', name: "FLAPPY NAIN", banner: "images/flappynainbanner.png", logo: "images/flappynainlogo.png", tags: ["PC", "Mobile", "Skill"], link: "game-wrapper.html?src=games/flappynain/pc/index.html", desc: "A challenging one-tap arcade game optimized for precision control." },
+                { id: 'snake', name: "SNAKE LAND", banner: "images/snakelandbanner.png", logo: "images/snakelandlogo.png", tags: ["PC", "Classic"], link: "game-wrapper.html?src=games/snakeland/pc/index.html", desc: "Experience the timeless snake game with modern physics and difficulty." },
+                { id: 'tictac', name: "TIC TAC TOE", banner: "images/tictactaebanner.png", logo: "images/tictactaelogo.png", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/tictactae/pc/index.html", desc: "The ultimate strategic puzzle game. Challenge a friend or the smart AI." },
+                { id: 'crush', name: "CRUSH CONNECT", banner: "images/crushconnectbanner.png", logo: "images/crushconnectlogo.png", tags: ["PC", "Mobile", "Puzzle"], link: "game-wrapper.html?src=games/crushconnect/pc/index.html", desc: "Link matching items in this addictive puzzle saga. Strategy is key." }
             ];
 
             const grid = document.getElementById('suggested-grid');
-            const shuffled = allGames.sort(() => 0.5 - Math.random()).slice(0, 3);
+            const filtered = allGames.filter(g => !iframe.src.includes(g.id));
+            const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 3);
 
             shuffled.forEach(game => {
+                const tagsHtml = game.tags.map(t => `<span class="tag">${t}</span>`).join('');
                 grid.innerHTML += `
                     <div class="game-card">
                         <div class="card-thumb"><img src="${game.banner}" alt="${game.name}"></div>
@@ -187,7 +190,8 @@
                                 <img src="${game.logo}" class="game-logo" alt="">
                                 <h3>${game.name}</h3>
                             </div>
-                            <div class="tags">${game.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+                            <div class="tags">${tagsHtml}</div>
+                            <p>${game.desc}</p>
                             <div class="card-actions">
                                 <a href="${game.link}" class="btn-sm full-width">Play Now</a>
                             </div>
