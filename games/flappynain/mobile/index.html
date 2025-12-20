@@ -27,16 +27,22 @@
             --shadow-hard: 0 6px 0 rgba(0,0,0,0.15);
         }
 
+        /* PROFESSIONAL BLUE HIGHLIGHT FIX */
+        * {
+            -webkit-tap-highlight-color: transparent; /* Removes blue box on tap */
+            -webkit-touch-callout: none;              /* Prevents callout menu */
+            user-select: none;                        /* Prevents text selection */
+            -webkit-user-select: none;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
-            background-color: #000; /* Black bg for overscroll/notch areas */
+            background-color: #000;
             height: 100%;
             width: 100%;
             overflow: hidden; 
             font-family: var(--ui-font);
-            user-select: none;
-            -webkit-user-select: none;
             touch-action: none;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
